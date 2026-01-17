@@ -1,0 +1,67 @@
+default_stages: [pre-commit]
+fail_fast: false
+
+default_language_version:
+  python: python3.12
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+        stages: [pre-commit]
+      - id: check-merge-conflict
+        args: [--assume-in-merge]
+        stages: [pre-push]
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-toml
+      - id: check-json
+      - id: debug-statements
+      - id: end-of-file-fixer
+        stages: [pre-commit]
+      - id: trailing-whitespace
+        stages: [pre-commit]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.7
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: forbid-crlf
+      - id: remove-crlf
+
+  - repo: https://github.com/commitizen-tools/commitizen
+    rev: v4.10.0
+    hooks:
+      - id: commitizen
+        stages: [commit-msg]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.0
+    hooks:
+      - id: mypy
+        additional_dependencies: [types-PyYAML, types-requests, types-Markdown, types-aiofiles]
+        args:
+          - "--namespace-packages"
+          - "--explicit-package-bases"
+
+  - repo: local
+    hooks:
+      - id: jscpd  # a useful one to counter the tendency of coding agents to duplicate code
+        name: jscpd (duplicate code detection)
+        entry: npx jscpd . --min-lines 10 --min-tokens 50 --threshold 5 --ignore "**/tests/**,**/.venv/**"
+        language: system
+        files: \.py$  # trigger when Python files are staged
+        pass_filenames: false  # but scan full directory (dupes are cross-file)
+        stages: [pre-commit, pre-push]
+
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
