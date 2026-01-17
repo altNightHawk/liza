@@ -1,0 +1,1 @@
+contracts/CONTRACT_FOR_PAIRING_AGENTS_v3.md
