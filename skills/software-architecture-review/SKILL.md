@@ -237,7 +237,7 @@ Do NOT proceed with enrichment without explicit user choice. The prompt exists b
    | 6 | Start from data flow — pick an input, trace it to output |
    | 7 | Start from documented smells in existing review — investigate each for clustering issues |
 
-   **ADRs are historical records:** Architecture Decision Records (`docs/adr/`) capture decisions at a point in time, not current state. Path references, architectural patterns, and implementation details in ADRs may have evolved since writing. When using entry point #4 with ADRs:
+   **ADRs are historical records:** Architecture Decision Records (`specs/architecture/ADR/`) capture decisions at a point in time, not current state. Path references, architectural patterns, and implementation details in ADRs may have evolved since writing. When using entry point #4 with ADRs:
    - Use ADRs to understand *intent* and *rationale*, not to verify current paths
    - Focus on *current* architectural issues, not ADR-vs-reality drift
    - Drift from ADRs is expected and not a finding — the codebase evolves

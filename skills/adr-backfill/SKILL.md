@@ -261,7 +261,7 @@ To avoid conflicts when numbers swap:
 
 # 9. ADR Output
 
-Use MADR format unless the user specifies otherwise. Place in `docs/adr/` or the project's existing ADR location.
+Use MADR format unless the user specifies otherwise. Place in `specs/architecture/ADR/` or the project's existing ADR location.
 
 ## Footer for commit-based ADRs
 ```
@@ -298,8 +298,8 @@ A bad backfilled ADR:
 
 Persist your work so it survives conversation boundaries:
 
-- `docs/adr/adr-backfill-state.yml` — classification, clusters, processing progress
-- `docs/adr/adr-backfill-clusters/` — one file per cluster with analysis and user input
+- `specs/architecture/ADR/adr-backfill-state.yml` — classification, clusters, processing progress
+- `specs/architecture/ADR/adr-backfill-clusters/` — one file per cluster with analysis and user input
 
 Check for existing state at the start. Offer to resume or restart.
 
@@ -380,7 +380,7 @@ clusters:
       alternatives: "RQ, Dramatiq, custom threading"
       rationale: "Celery has best ecosystem support..."
       limitations: "Redis becomes SPOF..."
-    adr_path: "docs/adr/0017-celery-integration.md"
+    adr_path: "specs/architecture/ADR/0017-celery-integration.md"
 
   # Spec/doc-derived cluster (supplementary ADR)
   - id: 18
@@ -393,7 +393,7 @@ clusters:
     analysis:
       intent_hypothesis: "Design comprehensive ATS detection system"
       solution_detected: "Three-module architecture with fallback strategies"
-    adr_path: "docs/adr/0012-platform-detection-architecture.md"
+    adr_path: "specs/architecture/ADR/0012-platform-detection-architecture.md"
 
 processing_cursor:
   step: "cluster_analysis"  # classification | pruning | filtering | clustering | gap_filling | cluster_analysis | gap_analysis | enrichment | ordering
@@ -402,7 +402,7 @@ processing_cursor:
 
 configuration:
   max_time_gap_days: 7
-  adr_output_dir: "docs/adr"
+  adr_output_dir: "specs/architecture/ADR"
   adr_format: "madr"  # madr | nygard | custom
   git_remote: "origin"
   pr_platform: "github"  # github | gitlab | bitbucket | none
