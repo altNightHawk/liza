@@ -191,6 +191,8 @@ Equal priority — apply contextually.
 | **No flag arguments** | Boolean changes behavior | Split into two functions |
 | **Error handling isolation** | Try/except mixed with logic | Separate error handling |
 | **KISS** | Complex solution where simple one works | Simplify: fewer branches, less indirection, obvious over clever |
+| **No nested ternaries** | Chained `? :` operators | Use if/else chain or switch statement |
+| **Clarity over brevity** | Dense one-liners, clever compaction | Prefer explicit form; longer can be cleaner |
 | **Dead code removal** | Unused imports, functions, variables, unreachable branches | Delete (use `vulture` for detection; false positives common — require explicit approval per item, do not batch delete) |
 
 # Scope Discipline
@@ -217,6 +219,8 @@ Equal priority — apply contextually.
 - Modifying tests as part of refactoring (invoke Testing skill instead)
 - Formatting-only changes (delegate to pre-commit hooks; only touch formatting in lines already being refactored)
 - Changing public APIs (function signatures, class interfaces) without explicit approval
+- Over-compaction (optimizing for line count at expense of readability)
+- Premature flattening (inlining abstractions that exist for clarity, even if used once)
 
 # Integration
 
