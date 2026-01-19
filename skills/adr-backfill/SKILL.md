@@ -1,6 +1,6 @@
 ---
 name: adr-backfill
-description: Backfill ADR from git history and documentation
+description: Backfill missing ADR from git history and documentation
 ---
 
 # Objective
