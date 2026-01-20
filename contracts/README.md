@@ -5,22 +5,29 @@ Their genesis is tailed at [Turning AI Coding Agents into Senior Engineering Pee
 
 ## Status
 
-Split of CONTRACT_FOR_PAIRING_AGENTS_v3.md into multiple files yet TODO.
+Contract split complete. Original `CONTRACT_FOR_PAIRING_AGENTS_v3.md` preserved for reference.
 
 ## Files
 
 | File | Purpose | Status |
 |------|---------|--------|
-| [LOADER.md](LOADER.md) | Mode selection gate | Complete |
-| CORE.md | Universal rules (Tiers, Golden Rules, Security, Recovery) | Pending extraction |
-| PAIRING_MODE.md | Human-supervised collaboration | Pending extraction |
-| MULTI_AGENT_MODE.md | Peer-supervised Liza system | Pending extraction |
+| [CORE.md](CORE.md) | Entry point + universal rules | Complete |
+| [PAIRING_MODE.md](PAIRING_MODE.md) | Human-supervised collaboration | Complete |
+| [MULTI_AGENT_MODE.md](MULTI_AGENT_MODE.md) | Peer-supervised Liza system | Complete |
+| [CONTRACT_FOR_PAIRING_AGENTS_v3.md](CONTRACT_FOR_PAIRING_AGENTS_v3.md) | Original monolithic contract (reference) | Preserved |
+| [LOADER.md](LOADER.md) | Deprecated (merged into CORE.md) | Deprecated |
 
 ## Deployment
 
-1. Copy contracts to `~/.claude/contracts/`
-2. Create symlink: `ln -s ~/.claude/contracts/LOADER.md ~/.claude/CLAUDE.md`
-3. Claude Code will load LOADER.md on session start
+Symlink contracts into `~/.claude/`:
+
+```bash
+ln -sf /path/to/contracts/CORE.md ~/.claude/CLAUDE.md
+ln -sf /path/to/contracts/PAIRING_MODE.md ~/.claude/PAIRING_MODE.md
+ln -sf /path/to/contracts/MULTI_AGENT_MODE.md ~/.claude/MULTI_AGENT_MODE.md
+```
+
+Claude Code loads `~/.claude/CLAUDE.md` on session start, which triggers mode selection and loads the appropriate mode contract.
 
 ## Contract Hierarchy
 
@@ -28,50 +35,68 @@ Split of CONTRACT_FOR_PAIRING_AGENTS_v3.md into multiple files yet TODO.
 CLAUDE.md (symlink)
     │
     ▼
-LOADER.md
+CORE.md (entry point + universal rules)
     │
-    ├── Read CORE.md (always)
-    │
-    └── Mode Selection
-        ├── "Mode: Pairing" → PAIRING_MODE.md
-        └── "Mode: Liza [role]" → MULTI_AGENT_MODE.md
+    └── Mode Selection Gate (auto-detect from bootstrap)
+        │
+        ├── Default (no Liza agent) → Read PAIRING_MODE.md
+        │                              → Execute Session Initialization
+        │                              → (read files, build models, greet)
+        │
+        └── "You are a Liza ... agent" → Read MULTI_AGENT_MODE.md
+                                       → Execute Session Initialization
+                                       → (read role/blackboard, silent)
 ```
 
-## Extraction Status
+**Key:** No response until Session Initialization from mode contract is complete.
 
-The contracts are currently defined in the implementation plan. They need to be extracted from the existing pairing contract (CONTRACT_FOR_PAIRING_AGENTS_v3.md) into:
+## Content Summary
 
-1. **CORE.md** — Universal rules shared between modes
-   - Rule Priority Architecture (Tiers 0-3)
-   - Golden Rules 1-14
-   - Security Protocol
-   - Recovery Protocols
-   - Git Protocol
-   - Mental Models
-   - Anti-Gaming Clause
-   - Runtime Kernel
+### CORE.md — Entry point + universal rules
+- **Initialization Sequence** (mode selection → read mode contract → execute Session Initialization)
+- Rule Priority Architecture (Tiers 0-3)
+- **Execution State Machine** (generalized with mode-specific gate semantics)
+- Golden Rules 1-14
+- Skills Integration
+- Protocol References (Debugging, Test, Architecture, Tools)
+- Context Management
+- Security Protocol
+- Recovery Protocols
+- Git Protocol
+- Mental Models
+- Anti-Gaming Clause
+- Runtime Kernel
 
-2. **PAIRING_MODE.md** — Human-supervised collaboration
-   - Execution State Machine (human approval gates)
-   - Collaboration Philosophy and Modes
-   - Approval Request Standard
-   - Skills Integration
-   - Subagent Mode
-   - Context Management
-   - Retrospective Protocol
-   - Magic Phrases
-   - Session Initialization
-   - Collaboration Continuity
+### PAIRING_MODE.md — Human-supervised collaboration
+- Contract Authority (human overrides)
+- Gate Semantics (Pairing): approval request → human approves
+- Collaboration Philosophy and Modes
+- Approval Request Standard
+- Skills Integration
+- Subagent Mode/Delegation
+- Context Management
+- Retrospective Protocol
+- Magic Phrases
+- Session Initialization
+- Collaboration Continuity
 
-3. **MULTI_AGENT_MODE.md** — Peer-supervised Liza system
-   - Contract Authority Override
-   - Role Definitions (Planner, Coder, Reviewer)
-   - Specification Discipline
-   - Blackboard Protocol (summary, links to spec)
-   - Worktree Protocol (summary, links to spec)
-   - Iteration Protocol
-   - Scope Discipline
-   - Session Initialization (Liza-specific)
+### MULTI_AGENT_MODE.md — Peer-supervised Liza system
+- Contract Authority (blackboard as source of truth)
+- Role Definitions (links to specs)
+- **Pre-Execution Checkpoint** (gate artifact for MAM)
+- Gate Semantics (Multi-Agent): checkpoint written = gate cleared
+- Task State Machine (blackboard workflow lifecycle)
+- Blackboard Protocol
+- Worktree Protocol
+- Iteration Protocol
+- Scope Discipline (spec is law)
+- Communication Protocol
+- Circuit Breaker
+- Human Intervention Points
+
+**Key Insight:** The Execution State Machine in CORE.md is universal — it forces structured thinking before action. The "gate" is the mechanism:
+- **Pairing**: Gate = human approval (agent waits)
+- **Multi-Agent**: Gate = checkpoint written to blackboard (self-clearing, but forces the same thinking; Code Reviewer verifies alignment later)
 
 ## Related Documents
 

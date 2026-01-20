@@ -6,11 +6,24 @@ Check [Genesis](../README.md#genesis) for the features.
 
 Create symlinks:
 ```
-- `~/.claude/AGENT_TOOLS.md` -> `~/Workspace/liza/contracts/AGENT_TOOLS.md`
 - `~/.claude/CLAUDE.md` -> `~/Workspace/liza/contracts/CONTRACT_FOR_PAIRING_AGENTS_v3.md`
+- `~/.claude/PAIRING_MODE.md` -> `~/Workspace/liza/contracts/PAIRING_MODE.md`
+- `~/.claude/MULTI_AGENT_MODE.md` -> `~/Workspace/liza/contracts/MULTI_AGENT_MODE.md`
+- `~/.claude/AGENT_TOOLS.md` -> `~/Workspace/liza/contracts/AGENT_TOOLS.md`
 - `~/.claude/skills` -> `~/Workspace/liza/contracts/skills`
 - `~/.claude/COLLABORATION_CONTINUITY.md` -> `~/Workspace/liza/contracts/COLLABORATION_CONTINUITY.md`
 - `~/.claude/scripts` -> `~/Workspace/liza/scripts`
+```
+
+In `~/.claude/settings.json`:
+```
+{
+  "permissions": {
+    "allow": [
+      "Read(~/.claude/**)"
+    ]
+  }
+}
 ```
 
 Verification:
