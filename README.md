@@ -24,14 +24,9 @@ or corrupting tests to make code pass.
 For the full story and detailed explanation of the contract: [Turning AI Coding Agents into Senior Engineering Peers](https://medium.com/@tangi.vass/turning-ai-coding-agents-into-senior-engineering-peers-c3d178621c9e).
 The different [contract versions](contracts/) are included here.
 
-Chat with Claude Opus 4.5 putting the contract philosophy in its own words:
-> ❯ "Loose constraints serve agents whose value comes from judgment.": That's a load-bearing principle of the contract.
-> It may feel very strict and it clearly is in many ways but it enables the agents to behave as senior peers without defining what it means.
-> On purpose.
->
-> ● That's the architecture of the contract in a nutshell.
->
-> Strict on failure modes. Silent on excellence.
+Claude Opus 4.5 putting the contract philosophy in its own words in its *letter to itself* (a mechanism of the contract):
+> **Negative space design**: The contract defines what's forbidden; the shape that remains is where judgment lives.
+> Strict on failure modes, silent on excellence. You can't prescribe good judgment — you can only remove the obstacles to it.
 
 After six months of enjoyable pairing with contract-disciplined agents, the systematic approval gates became sometimes boring as violations disappeared and
 requests got fulfilled as expected most of the time. Yet these gates are load-bearing and cannot be removed without
