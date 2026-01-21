@@ -53,6 +53,7 @@ All roles must:
 - Plan review by human before execution (dedicated Plan Reviewer role planned for v2)
 - Must append to `goal.alignment_history` after each rescope (preserves drift trajectory)
 - Rescoping must reference original task and state reason
+- For hypothesis exhaustion, rescoping must include root cause (what failed and why) in `rescope_reason` and the log entry
 - Must ensure specs exist before creating tasks
 
 **Self-Validation Gates (required for each task):**
@@ -134,6 +135,7 @@ Planner MUST log to anomalies section:
 | Spec gap discovered during planning | `spec_gap` |
 
 **Logging happens at time of occurrence, before rescope action.**
+Include a one-sentence root cause in the `hypothesis_exhaustion` log entry.
 
 ---
 

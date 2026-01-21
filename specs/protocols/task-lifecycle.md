@@ -68,6 +68,7 @@ If same task is BLOCKED by two different coders:
 1. Task framing presumed wrong
 2. Task cannot be reassigned unchanged
 3. Planner must: rescope (→ SUPERSEDED), split, or abandon
+4. Planner must identify and record root cause before rescoping; include it in `rescope_reason` and the log entry.
 
 This prevents infinite polite failure.
 
@@ -89,8 +90,9 @@ When planner rescopes a blocked task:
 1. Original task → `SUPERSEDED`
 2. New task(s) created with:
    - `supersedes: [original-task-id]`
-   - `rescope_reason: [why — wrong granularity | ambiguity | missing dependency | ...]`
+   - `rescope_reason: [root cause + rationale — ambiguity | missing dependency | architecture mismatch | invalid assumption | ...]`
 3. Log entry records the rescope
+4. Log entry includes a one-sentence root cause (what failed and why).
 
 Original task history is preserved. No silent rewrites.
 
