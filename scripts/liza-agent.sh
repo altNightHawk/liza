@@ -862,6 +862,12 @@ while true; do
     # Run Claude Code with prompt from file, then clean up
     # Add liza specs directory to allowed paths
     set +e
+    prompt_dir="$LIZA_DIR/agent-prompts"
+    mkdir -p "$prompt_dir"
+    prompt_ts=$(iso_timestamp | tr ':' '-')
+    prompt_log="$prompt_dir/${LIZA_AGENT_ID}-${prompt_ts}.txt"
+    cp "$PROMPT_FILE" "$prompt_log"
+    echo "Prompt saved: $prompt_log"
     LIZA_AGENT_ID="$LIZA_AGENT_ID" claude --add-dir "$LIZA_ROOT" -p "$(cat "$PROMPT_FILE")"
     EXIT_CODE=$?
     rm -f "$PROMPT_FILE"
