@@ -135,7 +135,7 @@ Planner MUST log to anomalies section:
 
 **Capabilities:**
 - Read specs to understand task requirements without asking
-- Claim unclaimed tasks (with backoff on contention)
+- Work on claimable tasks: UNCLAIMED, REJECTED, or INTEGRATION_FAILED (supervisor claims on coder's behalf)
 - Create/modify code in task worktree
 - Commit to task worktree (not integration branch)
 - Request review

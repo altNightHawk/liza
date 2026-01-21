@@ -254,8 +254,12 @@ The `depends_on` field declares explicit dependencies between tasks:
 
 **Claimability Rule:**
 ```
-claimable = (status == UNCLAIMED) AND (depends_on is empty OR all depends_on tasks are MERGED)
+claimable = (status in [UNCLAIMED, REJECTED, INTEGRATION_FAILED]) AND (depends_on is empty OR all depends_on tasks are MERGED)
 ```
+
+- **UNCLAIMED**: Fresh task ready for first attempt
+- **REJECTED**: Code review failed; coder can reclaim to address feedback
+- **INTEGRATION_FAILED**: Merge failed; coder can reclaim to resolve conflicts
 
 **Why explicit dependencies?**
 - Without explicit dependencies, Coders discover blockers at runtime → scattered BLOCKED tasks
@@ -426,7 +430,7 @@ config:
   max_coder_iterations: 10      # Default for all tasks
   max_review_cycles: 5          # Default for all tasks
   heartbeat_interval: 60        # Seconds
-  lease_duration: 300           # Seconds (5 minutes)
+  lease_duration: 1800          # Seconds (30 minutes)
   coder_poll_interval: 30       # Seconds between work availability checks
   coder_max_wait: 300           # Max seconds to wait for claimable work
   integration_branch: integration
@@ -669,7 +673,7 @@ invariants:
   - "depends_on must not create circular dependencies"
   - "CLAIMED task must have all depends_on tasks in MERGED status"
   - "Agent WORKING must have task"
-  - "Agent WORKING must have lease_expires in future (or within grace period of 60s)"
+  - "Agent WORKING should have lease_expires in future (warning if expired beyond grace period of 60s — may indicate long-running operation)"
   - "No two agents assigned to same task"
   - "Task with integration_fix:true must have prior INTEGRATION_FAILED in history"
   - "Task failed_by list must contain unique agent IDs"

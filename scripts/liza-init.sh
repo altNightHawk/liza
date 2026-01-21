@@ -107,7 +107,7 @@ config:
   max_coder_iterations: 10
   max_review_cycles: 5
   heartbeat_interval: 60
-  lease_duration: 300
+  lease_duration: 1800
   coder_poll_interval: 30
   coder_max_wait: 300
   planner_poll_interval: 60

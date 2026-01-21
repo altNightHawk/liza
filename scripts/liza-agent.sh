@@ -188,9 +188,9 @@ INSTRUCTIONS:
 - Review the code in the worktree $PROJECT_ROOT/$REVIEW_WORKTREE using the code-review skill
 - If change touches specs/, introduces new abstractions, adds state/lifecycle, or spans 3+ modules: also apply systemic-thinking skill
 - Verify the done_when criteria are met
-- If APPROVED: set task status to APPROVED, merge to integration branch
-- If REJECTED: set task status to REJECTED, add rejection_reason field
-- Update history with review outcome
+- If APPROVED: set task status to APPROVED, then run: $SCRIPT_DIR/wt-merge.sh $REVIEW_TASK_ID (this merges and sets status to MERGED)
+- If REJECTED: set task status to REJECTED, add rejection_reason field, add history entry
+- Always update your agent status to IDLE when done
 EOF
 }
 
@@ -363,8 +363,10 @@ validate_agent_identity
 register_agent() {
     local now
     now=$(iso_timestamp)
+    local lease_seconds
+    lease_seconds=$(get_config lease_duration 1800)
     local lease
-    lease=$(iso_timestamp_offset "+5 minutes")
+    lease=$(iso_timestamp_offset "+${lease_seconds} seconds")
     local terminal
     terminal=$(tty 2>/dev/null || echo unknown)
 
@@ -388,6 +390,17 @@ register_agent() {
     "
 }
 
+# Unregister agent from blackboard on exit
+unregister_agent() {
+    echo "Unregistering agent: $LIZA_AGENT_ID"
+    flock -x "$STATE_LOCK" -c "
+        yq -i 'del(.agents.\"$LIZA_AGENT_ID\")' '$STATE'
+    " 2>/dev/null || true
+}
+
+# Trap to ensure cleanup on any exit (including Ctrl+C)
+trap unregister_agent EXIT
+
 register_agent || die "Failed to register agent $LIZA_AGENT_ID (collision?)"
 echo "Registered agent: $LIZA_AGENT_ID"
 
@@ -410,13 +423,14 @@ log_polling() {
     echo "$msg Polling in ${poll_interval}s (waited ${waited}s/${max_wait}s)..."
 }
 
-# Count claimable tasks (UNCLAIMED with all dependencies satisfied)
+# Count claimable tasks (UNCLAIMED, REJECTED, or INTEGRATION_FAILED with all dependencies satisfied)
+# Uses array subtraction: (depends_on - merged_ids) gives unmet deps; length == 0 means all satisfied
 count_claimable_tasks() {
     yq -r '
         (.tasks | map(select(.status == "MERGED") | .id)) as $merged |
         [.tasks[] | select(
-            .status == "UNCLAIMED" and
-            ((.depends_on // []) | all(. as $dep | $merged | contains([$dep])))
+            (.status == "UNCLAIMED" or .status == "REJECTED" or .status == "INTEGRATION_FAILED") and
+            (((.depends_on // []) - $merged) | length == 0)
         )] | length
     ' "$STATE" 2>/dev/null || echo 0
 }
@@ -501,27 +515,68 @@ wait_for_planner_work() {
             return 0
         fi
 
-        # Check if goal is incomplete (tasks still in progress)
+        # Check sprint completion: all planned tasks are terminal (MERGED, ABANDONED, SUPERSEDED)
+        # Sprint can complete even if unplanned tasks are still in progress
+        local planned_count planned_terminal sprint_status sprint_complete
+        planned_count=$(yq '.sprint.scope.planned | length' "$STATE" 2>/dev/null || echo 0)
+        planned_terminal=$(yq '
+            (.sprint.scope.planned // []) as $planned |
+            [.tasks[] | select(.id as $id | $planned | contains([$id])) | select(.status == "MERGED" or .status == "ABANDONED" or .status == "SUPERSEDED")] | length
+        ' "$STATE" 2>/dev/null || echo 0)
+        sprint_status=$(yq '.sprint.status // ""' "$STATE" 2>/dev/null)
+        sprint_complete=false
+
+        if [ "$planned_count" -gt 0 ] && [ "$planned_terminal" -eq "$planned_count" ]; then
+            sprint_complete=true
+            # Only update sprint status on transition (not already COMPLETED)
+            if [ "$sprint_status" != "COMPLETED" ]; then
+                # Display sprint progress
+                local in_progress planned_merged
+                in_progress=$(count_tasks '.status == "CLAIMED"')
+                planned_merged=$(yq '
+                    (.sprint.scope.planned // []) as $planned |
+                    [.tasks[] | select(.id as $id | $planned | contains([$id])) | select(.status == "MERGED")] | length
+                ' "$STATE" 2>/dev/null || echo 0)
+                echo ""
+                echo "Sprint Progress:"
+                echo "  Planned tasks: $planned_count"
+                echo "  Merged: $planned_merged"
+                echo "  Abandoned/Superseded: $((planned_terminal - planned_merged))"
+                if [ "$in_progress" -gt 0 ]; then
+                    echo "  Unplanned tasks still in progress: $in_progress"
+                fi
+                echo ""
+                echo "All $planned_count planned task(s) complete. Sprint done."
+                # Update sprint status only (goal completion is separate)
+                local now
+                now=$(iso_timestamp)
+                flock -x "$STATE_LOCK" -c "
+                    yq -i '.sprint.status = \"COMPLETED\" | .sprint.timeline.ended = \"$now\"' '$STATE'
+                "
+            fi
+        fi
+
+        # Check if tasks are still in progress
         local active
         active=$(count_tasks '.status == "CLAIMED" or .status == "READY_FOR_REVIEW" or .status == "APPROVED" or .status == "UNCLAIMED" or .status == "DRAFT"')
-        local merged
-        merged=$(count_tasks '.status == "MERGED"')
 
         if [ "$active" -gt 0 ]; then
+            if [ "$sprint_complete" = true ]; then
+                echo "Sprint complete, but $active unplanned task(s) still active."
+            fi
             log_polling "No wake triggers, but $active active task(s)." "$poll_interval" "$waited" "$max_wait"
             sleep "$poll_interval"
             waited=$((waited + poll_interval))
             continue
         fi
 
-        # All tasks merged = goal complete
-        if [ "$merged" -eq "$total_tasks" ] && [ "$total_tasks" -gt 0 ]; then
-            echo "All $merged task(s) merged. Goal complete."
-            return 1
-        fi
-
-        # No triggers and no active tasks — goal may be complete
-        echo "No wake triggers and no active tasks. Planner work complete."
+        # All tasks terminal — goal complete
+        local now
+        now=$(iso_timestamp)
+        flock -x "$STATE_LOCK" -c "
+            yq -i '.goal.status = \"COMPLETED\"' '$STATE'
+        "
+        echo "No active tasks. Goal complete."
         return 1
     done
 
@@ -605,17 +660,18 @@ find_task_by_status() {
 #   - reviewing_by is null (no one assigned)
 #   - reviewing_by is set AND review_lease_expires is set AND expired (stale claim)
 # Invalid state (reviewing_by set but review_lease_expires missing) is NOT reviewable - fail fast
+# Note: Uses shell interpolation for $now because yq doesn't support --arg like jq
 find_reviewable_task() {
     local now
     now=$(iso_timestamp)
-    yq -r --arg now "$now" '
+    yq -r '
         [.tasks[] | select(
             .status == "READY_FOR_REVIEW" and
             (
                 # Case 1: No one assigned
                 ((.reviewing_by // null) == null) or
                 # Case 2: Someone assigned with valid expired lease
-                ((.reviewing_by // null) != null and (.review_lease_expires // null) != null and .review_lease_expires < $now)
+                ((.reviewing_by // null) != null and (.review_lease_expires // null) != null and .review_lease_expires < "'"$now"'")
             )
         )] |
         sort_by(.priority) |
@@ -623,23 +679,23 @@ find_reviewable_task() {
     ' "$STATE" 2>/dev/null
 }
 
-# Find highest-priority claimable task (UNCLAIMED with all dependencies satisfied)
-# A task is claimable if: status == UNCLAIMED AND (depends_on is empty OR all depends_on tasks are MERGED)
+# Find highest-priority claimable task (UNCLAIMED, REJECTED, or INTEGRATION_FAILED)
+# A task is claimable if: status in (UNCLAIMED, REJECTED, INTEGRATION_FAILED) AND deps satisfied
 find_claimable_task() {
     yq -r '
         # Get list of MERGED task IDs for dependency checking
         (.tasks | map(select(.status == "MERGED") | .id)) as $merged |
-        # Filter to UNCLAIMED tasks where all depends_on are in $merged
+        # Filter to claimable tasks where all depends_on are in $merged
         [.tasks[] | select(
-            .status == "UNCLAIMED" and
-            ((.depends_on // []) | all(. as $dep | $merged | contains([$dep])))
+            (.status == "UNCLAIMED" or .status == "REJECTED" or .status == "INTEGRATION_FAILED") and
+            (((.depends_on // []) - $merged) | length == 0)
         )] |
         sort_by(.priority) |
         .[0].id // ""
     ' "$STATE" 2>/dev/null
 }
 
-# Coder: Claim highest-priority claimable task (UNCLAIMED with dependencies satisfied)
+# Coder: Claim highest-priority claimable task (UNCLAIMED, REJECTED, or INTEGRATION_FAILED)
 # Sets CLAIMED_TASK_ID and CLAIMED_WORKTREE on success
 # Returns 0 on success, 1 on failure
 claim_coder_task() {
@@ -673,7 +729,7 @@ claim_reviewer_task() {
     task_id=$(find_reviewable_task)
 
     if [ -z "$task_id" ] || [ "$task_id" = "null" ]; then
-        echo "ERROR: No reviewable tasks (READY_FOR_REVIEW without active review lease)"
+        # Normal condition: task was claimed by another reviewer between wait and claim
         return 1
     fi
 
@@ -682,8 +738,10 @@ claim_reviewer_task() {
     # Update state to mark reviewer is reviewing this task
     local now
     now=$(iso_timestamp)
+    local lease_seconds
+    lease_seconds=$(get_config lease_duration 1800)
     local lease
-    lease=$(iso_timestamp_offset "+5 minutes")
+    lease=$(iso_timestamp_offset "+${lease_seconds} seconds")
 
     locked_yq "
         (.tasks[] | select(.id == \"$task_id\")).reviewing_by = \"$LIZA_AGENT_ID\" |
@@ -744,8 +802,7 @@ while true; do
     REVIEW_COMMIT=""
     if [ "$ROLE" = "code-reviewer" ]; then
         if ! claim_reviewer_task; then
-            echo "Failed to claim review task. Retrying in ${CRASH_DELAY}s..."
-            sleep "$CRASH_DELAY"
+            # No task to claim (race condition or none available) - go back to waiting
             continue
         fi
     fi

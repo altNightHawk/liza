@@ -66,7 +66,7 @@ now=$(iso_timestamp)
 validate_result=$(flock -x "$STATE_LOCK" -c "
     # Check task exists and get current state
     task_status=\$(yq -r '.tasks[] | select(.id == \"$TASK_ID\") | .status' '$STATE' 2>/dev/null)
-    if [ -z \"\$task_status\" ] || [ \"\$task_status\" == 'null' ]; then
+    if [ -z \"\$task_status\" ] || [ \"\$task_status\" = 'null' ]; then
         echo 'Task not found'
         exit 1
     fi

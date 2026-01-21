@@ -31,6 +31,10 @@ invalid() {
     exit 1
 }
 
+warn() {
+    echo "WARNING: $*"
+}
+
 # Find tasks matching a yq filter and return their IDs
 find_bad_tasks() {
     local filter="$1"
@@ -236,7 +240,7 @@ while read -r agent_info; do
     if [ -n "$lease_expires" ] && [ "$lease_expires" != "null" ]; then
         lease_epoch=$(date -d "$lease_expires" +%s 2>/dev/null || echo 0)
         if [ $((lease_epoch + GRACE_PERIOD)) -lt "$now" ]; then
-            invalid "Agent $agent_id has status WORKING but lease expired (beyond grace period)"
+            warn "Agent $agent_id has status WORKING but lease expired (may be long-running operation)"
         fi
     else
         invalid "Agent $agent_id has status WORKING but no lease_expires"

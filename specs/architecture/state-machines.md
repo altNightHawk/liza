@@ -8,7 +8,7 @@
 | UNCLAIMED | Task ready, no agent assigned | → CLAIMED |
 | CLAIMED | Coder assigned, work in progress | → READY_FOR_REVIEW, BLOCKED |
 | READY_FOR_REVIEW | Coder done, awaiting Code Reviewer | → APPROVED, REJECTED |
-| REJECTED | Code Reviewer rejected, feedback provided | → CLAIMED (supervisor re-claims for same coder) |
+| REJECTED | Code Reviewer rejected, feedback provided | → CLAIMED (supervisor reclaims for coder) |
 | APPROVED | Code Reviewer approved, merge eligible | → MERGED, INTEGRATION_FAILED |
 | MERGED | Successfully merged to integration | Terminal |
 | BLOCKED | Cannot proceed, awaiting escalation | → UNCLAIMED (rescoped), SUPERSEDED, ABANDONED |
@@ -82,7 +82,7 @@
 
 | Transition | Must Set | Must Preserve | Notes |
 |------------|----------|---------------|-------|
-| REJECTED → CLAIMED (same coder) | `lease_expires` (new) | `worktree`, `review_cycles_current`, `review_cycles_total` | Supervisor re-claims for same coder |
+| REJECTED → CLAIMED (same coder) | `lease_expires` (new) | `worktree`, `review_cycles_current`, `review_cycles_total` | Supervisor reclaims for same coder to address feedback |
 | REJECTED → CLAIMED (different coder) | `lease_expires`, `assigned_to`, `review_cycles_current: 0` | `review_cycles_total` | Worktree reset: delete old, create fresh |
 | INTEGRATION_FAILED → CLAIMED | `lease_expires`, `integration_fix: true` | `worktree` | Any coder may claim; keeps worktree for conflict resolution |
 | BLOCKED → UNCLAIMED | — | `failed_by` | Preserves failure history; worktree deleted |
@@ -367,7 +367,7 @@ invariants:
   - "SUPERSEDED task must have superseded_by and rescope_reason"
   - "MERGED task must not have worktree"
   - "Agent WORKING must have task"
-  - "Agent WORKING must have lease_expires in future (or within grace period of 60s)"
+  - "Agent WORKING should have lease_expires in future (warning if expired beyond grace period of 60s — may indicate long-running operation)"
   - "No two agents assigned to same task"
   - "Task with integration_fix:true must have prior INTEGRATION_FAILED in history"
 ```
