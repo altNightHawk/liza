@@ -591,7 +591,7 @@ Reads do not require lock (eventual consistency acceptable for reads).
 | Claim review | Supervisor | Lock → verify READY_FOR_REVIEW + no active review lease → write reviewing_by + review_lease_expires → unlock |
 | Extend review lease | Code Reviewer | Lock → update review_lease_expires → unlock |
 | Submit verdict | Code Reviewer | Lock → verify commit SHA matches + reviewing_by matches self → set APPROVED/REJECTED + reason + clear review lease → unlock |
-| Execute merge | Code Reviewer | Only after APPROVED → run wt-merge.sh → update state to MERGED |
+| Execute merge | Supervisor | After Code Reviewer sets APPROVED → supervisor runs wt-merge.sh → update state to MERGED |
 | Mark blocked | Any | Lock → set state BLOCKED + diagnosis → unlock |
 | Rescope task | Planner | Lock → set original SUPERSEDED → create new task(s) with reference → unlock |
 | Finalize draft | Planner | Lock → change DRAFT to UNCLAIMED → unlock |

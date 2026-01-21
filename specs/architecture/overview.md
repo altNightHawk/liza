@@ -121,9 +121,9 @@ Planner writes tasks as DRAFT, finalizes to UNCLAIMED. Coders cannot claim half-
 
 Coder records commit SHA when requesting review. Code Reviewer verifies the SHA before examining work. No reviewing stale state.
 
-### Code Reviewer-Only Merge
+### Approval-Gated Merge
 
-Coders commit to their worktree. Only Code Reviewers can merge to the integration branch. Authority is structural, not advisory.
+Coders commit to their worktree. Only the supervisor can merge to the integration branch, and only after Code Reviewer approval. Authority is structural, not advisory.
 
 ### Hypothesis Exhaustion
 
@@ -178,7 +178,7 @@ Update symlink when switching projects: `ln -sf /path/to/project/contracts/CORE.
     ├── liza-analyze.sh            # Circuit breaker analysis
     ├── liza-agent.sh              # Agent supervisor
     ├── wt-create.sh               # Create worktree
-    ├── wt-merge.sh                # Merge (Code Reviewer-only)
+    ├── wt-merge.sh                # Merge (supervisor-executed after APPROVED)
     └── wt-delete.sh               # Clean up worktree
 ```
 

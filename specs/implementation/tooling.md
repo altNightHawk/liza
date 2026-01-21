@@ -33,7 +33,7 @@ Contracts are versioned with the project:
 | `liza-agent.sh` | Agent supervisor (while-true wrapper) |
 | `liza-claim-task.sh` | Claim task with two-phase commit (called by supervisor) |
 | `wt-create.sh` | Create worktree for task |
-| `wt-merge.sh` | Merge approved worktree (Code Reviewer-only) |
+| `wt-merge.sh` | Merge approved worktree (supervisor-executed after APPROVED) |
 | `wt-delete.sh` | Clean up abandoned/merged worktree |
 | `update-sprint-metrics.sh` | Recompute sprint.metrics from task state |
 | `clear-stale-review-claims.sh` | Clear expired review claims |
@@ -176,7 +176,7 @@ Scripts are divided into agent-callable and supervisor-only:
 |--------|-----------|---------|
 | `liza-lock.sh` | All agents | Atomic blackboard operations |
 | `liza-validate.sh` | All agents (optional) | Verify state before/after operations |
-| `wt-merge.sh` | Code Reviewer | Merge after approval |
+| `wt-merge.sh` | Supervisor | Merge after Code Reviewer approves |
 | `wt-delete.sh` | Planner | Clean up abandoned tasks |
 
 **Supervisor-Only Scripts:**
@@ -321,7 +321,7 @@ Script implementations are in the [`scripts/`](scripts/) directory:
 | `liza-agent.sh` | Agent supervisor (while-true wrapper) | [scripts/liza-agent.sh](scripts/liza-agent.sh) |
 | `liza-claim-task.sh` | Claim task with two-phase commit | [scripts/liza-claim-task.sh](scripts/liza-claim-task.sh) |
 | `wt-create.sh` | Create worktree for task | [scripts/wt-create.sh](scripts/wt-create.sh) |
-| `wt-merge.sh` | Merge approved worktree (Code Reviewer-only) | [scripts/wt-merge.sh](scripts/wt-merge.sh) |
+| `wt-merge.sh` | Merge approved worktree (supervisor-executed after APPROVED) | [scripts/wt-merge.sh](scripts/wt-merge.sh) |
 | `wt-delete.sh` | Clean up abandoned/merged worktree | [scripts/wt-delete.sh](scripts/wt-delete.sh) |
 
 ### Script Usage Summary
@@ -375,7 +375,7 @@ wt-create.sh [--fresh] <task-id>
 # --fresh: Delete existing worktree before creating (for reassignment to different coder)
 ```
 
-**wt-merge.sh** — Merge worktree (Code Reviewer-only)
+**wt-merge.sh** — Merge worktree (supervisor-executed after APPROVED)
 ```bash
 wt-merge.sh <task-id>
 # Requires LIZA_AGENT_ID to be a Code Reviewer, task must be APPROVED

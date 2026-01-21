@@ -1,6 +1,7 @@
 #!/bin/bash
-# Merge approved task worktree to integration (Code Reviewer-only)
+# Merge approved task worktree to integration (supervisor-executed after APPROVED)
 # Usage: wt-merge.sh <task-id>
+# Note: Requires LIZA_AGENT_ID to be a code-reviewer (supervisor runs under reviewer's identity)
 
 set -euo pipefail
 

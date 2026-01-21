@@ -192,7 +192,7 @@ INSTRUCTIONS:
 - TDD ENFORCEMENT (code tasks): REJECT if tests are missing or don't cover done_when criteria
 - Exempt: doc-only, config-only, or spec-only tasks (no code = no tests required)
 - Verify the done_when criteria are met AND tests exercise those criteria (for code tasks)
-- If APPROVED: set task status to APPROVED, then run: $SCRIPT_DIR/wt-merge.sh $REVIEW_TASK_ID (this merges and sets status to MERGED)
+- If APPROVED: set task status to APPROVED (supervisor will handle merge)
 - If REJECTED: set task status to REJECTED, add rejection_reason field, add history entry
 - Always update your agent status to IDLE when done
 EOF
@@ -662,6 +662,26 @@ wait_for_work() {
     esac
 }
 
+# Supervisor: Handle merge for APPROVED tasks
+# Called after Code Reviewer agent completes - supervisor runs merge (not agent)
+# This avoids permission prompts in non-interactive agent mode
+handle_approved_merges() {
+    local task_id
+    task_id=$(yq -r '[.tasks[] | select(.status == "APPROVED")] | .[0].id // ""' "$STATE" 2>/dev/null)
+
+    while [ -n "$task_id" ] && [ "$task_id" != "null" ]; do
+        echo "Supervisor: Merging APPROVED task $task_id..."
+        if "$SCRIPT_DIR/wt-merge.sh" "$task_id"; then
+            echo "Supervisor: Merged $task_id successfully."
+        else
+            echo "ERROR: Supervisor failed to merge $task_id. Manual intervention needed."
+            return 1
+        fi
+        # Check for more APPROVED tasks
+        task_id=$(yq -r '[.tasks[] | select(.status == "APPROVED")] | .[0].id // ""' "$STATE" 2>/dev/null)
+    done
+}
+
 # Find highest-priority task by status
 find_task_by_status() {
     local status="$1"
@@ -852,8 +872,15 @@ while true; do
 
     case $EXIT_CODE in
         0)
-            # Agent completed normally — loop will check for work at top
-            echo "Agent completed. Checking for more work..."
+            # Agent completed normally
+            echo "Agent completed."
+
+            # Supervisor handles merge for Code Reviewer (avoids agent permission prompts)
+            if [ "$ROLE" = "code-reviewer" ]; then
+                handle_approved_merges
+            fi
+
+            echo "Checking for more work..."
             ;;
         42)
             echo "Agent aborted gracefully (code 42). Restarting in ${RESTART_DELAY}s..."

@@ -7,7 +7,7 @@
 | Task CLAIMED (fresh) | Create worktree via `liza-claim-task.sh` | Supervisor |
 | Task CLAIMED (reassignment) | Create fresh worktree via `liza-claim-task.sh` | Supervisor |
 | Task APPROVED | Merge eligible | — |
-| Task MERGED | `wt-merge.sh task-N` | Code Reviewer |
+| Task MERGED | `wt-merge.sh task-N` | Supervisor (after Code Reviewer approves) |
 | Task BLOCKED | Delete worktree: `wt-delete.sh task-N` | Planner |
 | Task ABANDONED/SUPERSEDED | Delete worktree: `wt-delete.sh task-N` | Planner |
 | Task INTEGRATION_FAILED | Worktree retained for conflict resolution | — |
@@ -43,17 +43,18 @@ Merge to main is human-triggered, not part of Liza flow.
 | Actor | Can Commit To |
 |-------|---------------|
 | Coder | Task worktree branch only |
-| Code Reviewer | Integration branch (via merge only) |
+| Code Reviewer | None (read-only; approves for merge) |
 | Planner | Neither (no code changes) |
+| Supervisor | Integration branch (executes merge after APPROVED) |
 
-**Hard rule:** Coders cannot commit to or merge to integration. Only Code Reviewers merge.
+**Hard rule:** Coders cannot commit to or merge to integration. Only the supervisor can merge, and only after Code Reviewer approval.
 
 ---
 
 ## Worktree Rules
 
 1. Coder works only in assigned task's worktree
-2. Code Reviewer examines same worktree (read-only until merge)
+2. Code Reviewer examines same worktree (read-only)
 3. No cross-worktree file access
 4. No direct commits to integration branch
 

@@ -219,19 +219,18 @@ Coder MUST log to anomalies section:
 
 ## Code Reviewer
 
-**Purpose:** Verify coder output. Approve or reject with binding verdict. Merge approved work.
+**Purpose:** Verify coder output. Approve or reject with binding verdict.
 
 **Capabilities:**
 - Read specs to validate implementation against requirements
 - Claim tasks in READY_FOR_REVIEW state (write `reviewing_by`, `review_lease_expires`)
 - Read task worktree and verify commit SHA
 - Run validation commands
-- Approve (triggers merge eligibility)
+- Approve (triggers merge eligibility — supervisor executes merge)
 - Reject with specific, actionable reason
-- Execute merge to integration branch (Code Reviewer-only privilege)
 
 **Constraints:**
-- Cannot modify code in worktree (read-only except for merge)
+- Cannot modify code in worktree (read-only)
 - Must cite specific criteria or invariant for rejection
 - Cannot reject on "vibes" or style preference
 - Verdict is final for that review cycle
@@ -332,8 +331,11 @@ Code Reviewer does NOT evaluate:
 | Actor | Can Commit To |
 |-------|---------------|
 | Coder | Task worktree branch only |
-| Code Reviewer | Integration branch (via merge only) |
+| Code Reviewer | None (read-only; approves for merge) |
 | Planner | Neither (no code changes) |
+| Supervisor | Integration branch (executes merge after APPROVED) |
+
+**Merge Execution:** The supervisor (`liza-agent.sh`) executes `wt-merge.sh` after Code Reviewer sets status to APPROVED. This keeps agents permission-free in non-interactive mode while preserving the Code Reviewer approval gate.
 
 ## Agent Identity Protocol
 
