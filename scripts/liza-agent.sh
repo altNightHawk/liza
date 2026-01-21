@@ -110,14 +110,14 @@ OPERATIONAL RULES:
 - Do NOT ask for permission textually - just use Edit/Write tools
 - The human will see tool permission prompts from Claude Code if needed
 - Work autonomously: read specs, execute protocol, write to blackboard
-- Exit when your current work unit is complete (task claimed, reviewed, etc.)
+- Exit when your current work unit is complete (task implemented, review done, etc.)
 
-HELPER SCRIPTS (MANDATORY for state transitions):
-- ~/.claude/scripts/liza-claim-task.sh <task-id> <agent-id> — MUST use to claim tasks
+HELPER SCRIPTS:
 - ~/.claude/scripts/liza-validate.sh <state.yaml> — Validate blackboard state
 
 FORBIDDEN:
-- Do NOT manually set task status to CLAIMED - use liza-claim-task.sh
+- Do NOT attempt to claim tasks - the supervisor has already claimed your task
+- Do NOT manually modify task status to CLAIMED
 - Do NOT skip worktrees or "simplify" the protocol
 - Do NOT make architecture decisions - follow the spec exactly
 
@@ -600,6 +600,29 @@ find_task_by_status() {
     yq -r "[.tasks[] | select(.status == \"$status\")] | sort_by(.priority) | .[0].id // \"\"" "$STATE" 2>/dev/null
 }
 
+# Find highest-priority reviewable task (READY_FOR_REVIEW with no active review lease)
+# A task is reviewable if: status == READY_FOR_REVIEW AND one of:
+#   - reviewing_by is null (no one assigned)
+#   - reviewing_by is set AND review_lease_expires is set AND expired (stale claim)
+# Invalid state (reviewing_by set but review_lease_expires missing) is NOT reviewable - fail fast
+find_reviewable_task() {
+    local now
+    now=$(iso_timestamp)
+    yq -r --arg now "$now" '
+        [.tasks[] | select(
+            .status == "READY_FOR_REVIEW" and
+            (
+                # Case 1: No one assigned
+                ((.reviewing_by // null) == null) or
+                # Case 2: Someone assigned with valid expired lease
+                ((.reviewing_by // null) != null and (.review_lease_expires // null) != null and .review_lease_expires < $now)
+            )
+        )] |
+        sort_by(.priority) |
+        .[0].id // ""
+    ' "$STATE" 2>/dev/null
+}
+
 # Find highest-priority claimable task (UNCLAIMED with all dependencies satisfied)
 # A task is claimable if: status == UNCLAIMED AND (depends_on is empty OR all depends_on tasks are MERGED)
 find_claimable_task() {
@@ -642,15 +665,15 @@ claim_coder_task() {
     return 0
 }
 
-# Code Reviewer: Claim highest-priority READY_FOR_REVIEW task
+# Code Reviewer: Claim highest-priority reviewable task (no active review lease)
 # Sets REVIEW_TASK_ID, REVIEW_WORKTREE, REVIEW_COMMIT on success
 # Returns 0 on success, 1 on failure
 claim_reviewer_task() {
     local task_id
-    task_id=$(find_task_by_status "READY_FOR_REVIEW")
+    task_id=$(find_reviewable_task)
 
     if [ -z "$task_id" ] || [ "$task_id" = "null" ]; then
-        echo "ERROR: No READY_FOR_REVIEW tasks to review"
+        echo "ERROR: No reviewable tasks (READY_FOR_REVIEW without active review lease)"
         return 1
     fi
 

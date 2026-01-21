@@ -272,7 +272,7 @@ agents:
   coder-1:
     role: coder
     status: WORKING
-    task: task-2
+    current_task: task-2
     lease_expires: 2025-01-17T14:57:00Z
     heartbeat: 2025-01-17T14:52:00Z
     terminal: /dev/pts/2  # For human observation: which terminal window is this agent?
@@ -282,7 +282,7 @@ agents:
   code-reviewer-1:
     role: code_reviewer
     status: IDLE
-    task: null
+    current_task: null
     lease_expires: null
     heartbeat: 2025-01-17T14:50:00Z
     terminal: /dev/pts/3
@@ -503,7 +503,7 @@ Agents hold **leases**, not just heartbeats. Lease = "I own this task until time
 agents:
   coder-1:
     role: coder
-    task: task-3
+    current_task: task-3
     lease_expires: 2025-01-17T14:35:00Z
     heartbeat: 2025-01-17T14:32:00Z
     terminal: /dev/pts/2
