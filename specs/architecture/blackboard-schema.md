@@ -69,6 +69,7 @@ tasks:
     created: 2025-01-17T14:05:00Z
     worktree: null  # cleaned up after merge
     review_commit: a1b2c3d4
+    merge_commit: d4e5f6a7
     spec_ref: specs/retry-logic.md  # Path to spec, optionally with #anchor
     done_when: "UserAPI.get_user() retries 3x on 5xx errors with exponential backoff"
     history:
@@ -189,6 +190,7 @@ tasks:
     review_commit: c3d4e5f6
     reviewing_by: code-reviewer-1         # Code Reviewer who claimed this review
     review_lease_expires: 2025-01-17T17:05:00Z  # Code Reviewer lease (same mechanics as coder)
+    approved_by: null  # Set on approval; used by supervisor to merge only its reviewer's approvals
     spec_ref: specs/api.md#rate-limiting
     done_when: "Public endpoints return 429 with Retry-After header when limit exceeded"
     created: 2025-01-17T16:45:00Z
@@ -540,6 +542,8 @@ agents:
 |-------|---------|
 | `reviewing_by` | Agent ID of Code Reviewer currently examining (null if unclaimed) |
 | `review_lease_expires` | Code Reviewer lease expiry timestamp (same mechanics as coder lease) |
+| `approved_by` | Agent ID of Code Reviewer who approved the task (null until approved) |
+| `merge_commit` | Integration branch commit SHA created by merge (null until merged) |
 
 Code Reviewer lease prevents two Code Reviewers examining same task simultaneously and enables recovery from Code Reviewer crash.
 
@@ -590,7 +594,7 @@ Reads do not require lock (eventual consistency acceptable for reads).
 | Request review | Coder | Lock → verify clean git status → write commit SHA + set READY_FOR_REVIEW atomically → unlock |
 | Claim review | Supervisor | Lock → verify READY_FOR_REVIEW + no active review lease → write reviewing_by + review_lease_expires → unlock |
 | Extend review lease | Code Reviewer | Lock → update review_lease_expires → unlock |
-| Submit verdict | Code Reviewer | Lock → verify commit SHA matches + reviewing_by matches self → set APPROVED/REJECTED + reason + clear review lease → unlock |
+| Submit verdict | Code Reviewer | Lock → verify commit SHA matches + reviewing_by matches self → set APPROVED/REJECTED + reason + set approved_by on approval + clear review lease → unlock |
 | Execute merge | Supervisor | After Code Reviewer sets APPROVED → supervisor runs wt-merge.sh → update state to MERGED |
 | Mark blocked | Any | Lock → set state BLOCKED + diagnosis → unlock |
 | Rescope task | Planner | Lock → set original SUPERSEDED → create new task(s) with reference → unlock |

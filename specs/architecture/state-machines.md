@@ -138,6 +138,8 @@ READY_FOR_REVIEW
 - Supervisor claims review before spawning Code Reviewer (prevents duplicate reviews)
 - Code Reviewer must extend lease with heartbeats during long reviews
 - On verdict: clear `reviewing_by` and `review_lease_expires`
+- On approval: set `approved_by` to Code Reviewer agent ID
+- On merge: set `merge_commit` to integration commit SHA
 - Stale review lease allows supervisor to reassign (Code Reviewer crash recovery)
 
 See [Blackboard Schema — Lease Model](blackboard-schema.md#lease-model) for field details.

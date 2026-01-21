@@ -149,8 +149,9 @@ fi
 git worktree remove "$worktree_dir"
 git branch -d "task/$TASK_ID"
 
-# Update both fields atomically to prevent observing MERGED with non-null worktree
-locked_yq "(.tasks[] | select(.id == \"$TASK_ID\")) |= (.status = \"MERGED\" | .worktree = null)"
+# Update fields atomically to prevent observing MERGED with non-null worktree
+merge_commit=$(git rev-parse HEAD | cut -c1-7)
+locked_yq "(.tasks[] | select(.id == \"$TASK_ID\")) |= (.status = \"MERGED\" | .worktree = null | .merge_commit = \"$merge_commit\")"
 
 # Log with drift info
 cat >> "$LOG" << EOF

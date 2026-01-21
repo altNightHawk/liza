@@ -192,7 +192,7 @@ INSTRUCTIONS:
 - TDD ENFORCEMENT (code tasks): REJECT if tests are missing or don't cover done_when criteria
 - Exempt: doc-only, config-only, or spec-only tasks (no code = no tests required)
 - Verify the done_when criteria are met AND tests exercise those criteria (for code tasks)
-- If APPROVED: set task status to APPROVED (supervisor will handle merge)
+- If APPROVED: set task status to APPROVED and set approved_by to your agent ID (supervisor will handle merge)
 - If REJECTED: set task status to REJECTED, add rejection_reason field, add history entry
 - Always update your agent status to IDLE when done
 EOF
@@ -667,7 +667,7 @@ wait_for_work() {
 # This avoids permission prompts in non-interactive agent mode
 handle_approved_merges() {
     local task_id
-    task_id=$(yq -r '[.tasks[] | select(.status == "APPROVED")] | .[0].id // ""' "$STATE" 2>/dev/null)
+    task_id=$(yq -r '[.tasks[] | select(.status == "APPROVED" and .approved_by == "'"$LIZA_AGENT_ID"'")] | .[0].id // ""' "$STATE" 2>/dev/null)
 
     while [ -n "$task_id" ] && [ "$task_id" != "null" ]; do
         echo "Supervisor: Merging APPROVED task $task_id..."
@@ -677,8 +677,8 @@ handle_approved_merges() {
             echo "ERROR: Supervisor failed to merge $task_id. Manual intervention needed."
             return 1
         fi
-        # Check for more APPROVED tasks
-        task_id=$(yq -r '[.tasks[] | select(.status == "APPROVED")] | .[0].id // ""' "$STATE" 2>/dev/null)
+        # Check for more APPROVED tasks (by this reviewer)
+        task_id=$(yq -r '[.tasks[] | select(.status == "APPROVED" and .approved_by == "'"$LIZA_AGENT_ID"'")] | .[0].id // ""' "$STATE" 2>/dev/null)
     done
 }
 
@@ -814,7 +814,10 @@ while true; do
 
     # Supervisor handles merge for APPROVED tasks (avoids agent permission prompts)
     if [ "$ROLE" = "code-reviewer" ]; then
-        handle_approved_merges
+        approved_pending=$(count_tasks ".status == \"APPROVED\" and .approved_by == \"$LIZA_AGENT_ID\" and .merge_commit == null")
+        if [ "$approved_pending" -gt 0 ]; then
+            handle_approved_merges
+        fi
     fi
 
     # Wait for work before starting agent (saves API calls)
