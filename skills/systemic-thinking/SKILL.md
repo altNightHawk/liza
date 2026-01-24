@@ -147,10 +147,10 @@ Each finding must include skill attribution:
 The skill uses the full system for context, but what to *raise* depends on mode:
 
 **Liza mode (multi-agent):**
-- Only raise issues **introduced or materially affected by the considered commit**
+- Only raise issues **introduced or materially affected by the changes on the worktree**
 - Pre-existing systemic issues unrelated to the changes are out of scope
 - Use system context to evaluate *impact* of changes, not to audit the whole system
-- Example: If considered commit introduces a new single point of failure, raise it. If a SPOF already exists elsewhere, ignore it unless the changes interact with it or make it worse.
+- Example: If the worktree changes introduce a new single point of failure, raise it. If a SPOF already exists elsewhere, ignore it unless the changes interact with it or make it worse.
 
 **Pairing mode:**
 - Do not re-raise issues already documented in ISSUES_FILE unless they have materially changed

@@ -239,13 +239,16 @@ build_reviewer_context() {
     task_done_when=$(get_task_field "$REVIEW_TASK_ID" "done_when")
     local task_assigned_to
     task_assigned_to=$(get_task_field "$REVIEW_TASK_ID" "assigned_to")
+    local task_base_commit
+    task_base_commit=$(get_task_field "$REVIEW_TASK_ID" "base_commit")
 
     cat << EOF
 
 === REVIEW TASK ===
 TASK ID: $REVIEW_TASK_ID
 WORKTREE: $PROJECT_ROOT/$REVIEW_WORKTREE
-COMMIT TO REVIEW: $REVIEW_COMMIT
+BASE COMMIT: $task_base_commit
+REVIEW COMMIT: $REVIEW_COMMIT
 AUTHOR: $task_assigned_to
 DESCRIPTION: $task_desc
 
@@ -254,8 +257,11 @@ $task_done_when
 
 INSTRUCTIONS:
 - The task is already assigned to you for review.
-- Check the commit: git -C $PROJECT_ROOT/$REVIEW_WORKTREE show $REVIEW_COMMIT. If not, fail fast to REJECTED.
-- Review the code in the worktree $PROJECT_ROOT/$REVIEW_WORKTREE using the code-review skill
+- Verify HEAD matches REVIEW_COMMIT: git -C $PROJECT_ROOT/$REVIEW_WORKTREE rev-parse HEAD. If mismatch, REJECT.
+- Review ALL changes in the worktree (base_commit → review_commit), not just the latest commit.
+  Each review is a fresh evaluation: "does this worktree satisfy the task?"
+  Use: git -C $PROJECT_ROOT/$REVIEW_WORKTREE diff $task_base_commit..$REVIEW_COMMIT
+- Apply the code-review skill to the full diff
 - If change touches specs/, introduces new abstractions, adds state/lifecycle, or spans 3+ modules: also apply systemic-thinking skill
 - TDD ENFORCEMENT (code tasks): REJECT if tests are missing or don't cover done_when criteria
 - Exempt: doc-only, config-only, or spec-only tasks (no code = no tests required)

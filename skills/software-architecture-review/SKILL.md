@@ -648,10 +648,10 @@ Each finding must include skill attribution:
 The skill uses the full repo for context, but what to *raise* depends on mode:
 
 **Liza mode (multi-agent):**
-- Only raise issues **introduced by the considered commit**
+- Only raise issues **introduced by the changes on the worktree**
 - Pre-existing issues unrelated to the changes are out of scope
 - Use repo context to evaluate *impact* of changes, not to audit the whole codebase
-- Example: If considered commit adds a new god class, raise it. If a god class already exists elsewhere, ignore it unless the changes interact with it.
+- Example: If the worktree changes add a new god class, raise it. If a god class already exists elsewhere, ignore it unless the changes interact with it.
 
 **Pairing mode:**
 - Do not re-raise issues already documented in ISSUES_FILE unless they have materially changed
