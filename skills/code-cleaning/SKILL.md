@@ -109,7 +109,33 @@ Next: [batch N+1 name] — [description]
 Proceed (P) / Skip (S) / Stop (X)?
 ```
 
-If no batches remain, skip the "Next:" line and proceed to Convergence.
+If no batches remain, skip the "Next:" line and proceed to Test Maintenance.
+
+# Test Maintenance
+
+After extraction refactorings, update tests to match the new structure:
+
+1. **Add unit tests for extracted functions**
+   - Extracted functions deserve direct unit tests
+   - Test the function in isolation, not through the original caller
+   - Cover edge cases that may have been implicit before
+
+2. **Remove redundant tests**
+   - Tests that now duplicate the new direct tests are redundant
+   - Indirect tests (via caller) can be removed when direct tests exist
+   - Keep integration-level tests that verify the wiring between functions
+
+**Trigger:** Any batch that extracts a function (Small functions, Single Responsibility, DRY principles).
+
+**Output:**
+```
+Test maintenance:
+  Added: N tests for extracted functions
+  Removed: M redundant tests (covered by direct tests)
+  Net: +/- X tests
+```
+
+Skip if no extractions occurred.
 
 # Pre-commit Validation
 
@@ -216,7 +242,7 @@ Equal priority — apply contextually.
 - Continuing after test failure without user approval
 - Premature abstraction (don't extract for one use)
 - Renaming for personal preference (rename for clarity only)
-- Modifying tests as part of refactoring (invoke Testing skill instead)
+- Modifying test assertions or logic (invoke Testing skill instead) — exception: adding tests for extracted functions and removing redundant tests (see Test Maintenance)
 - Formatting-only changes (delegate to pre-commit hooks; only touch formatting in lines already being refactored)
 - Changing public APIs (function signatures, class interfaces) without explicit approval
 - Over-compaction (optimizing for line count at expense of readability)
