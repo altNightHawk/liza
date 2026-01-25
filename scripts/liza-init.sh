@@ -1,6 +1,7 @@
 #!/bin/bash
 # Initialize Liza blackboard for new goal
-# Usage: liza-init.sh "Goal description"
+# Usage: liza-init.sh "Goal description" [spec_ref]
+#   spec_ref: Path to goal spec (default: specs/vision.md)
 
 set -euo pipefail
 
@@ -20,15 +21,20 @@ iso_timestamp() {
     date -u +%Y-%m-%dT%H:%M:%SZ
 }
 
+# --- Arguments ---
+
+goal_desc="${1:-}"
+spec_ref="${2:-specs/vision.md}"
+
 # --- Validation ---
 
 if [ -d "$LIZA_DIR" ]; then
     die ".liza already exists. Remove or use existing."
 fi
 
-if [ ! -f "$PROJECT_ROOT/specs/vision.md" ]; then
-    die "specs/vision.md required before initialization.
-Create vision document first. See templates/vision-template.md"
+if [ ! -f "$PROJECT_ROOT/$spec_ref" ]; then
+    die "$spec_ref required before initialization.
+Create spec document first. See templates/vision-template.md"
 fi
 
 # --- Initialize Directory Structure ---
@@ -36,9 +42,8 @@ fi
 mkdir -p "$LIZA_DIR"
 mkdir -p "$LIZA_DIR/archive"
 
-# --- Get Goal Description ---
+# --- Get Goal Description (if not provided) ---
 
-goal_desc="${1:-}"
 if [ -z "$goal_desc" ]; then
     read -rp "Goal description: " goal_desc
 fi
@@ -56,6 +61,7 @@ version: 1
 goal:
   id: $goal_id
   description: ""
+  spec_ref: $spec_ref
   created: $timestamp
   status: IN_PROGRESS
   alignment_history:

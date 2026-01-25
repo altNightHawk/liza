@@ -73,7 +73,7 @@ git commit -m "Initial commit: vision spec"
 ## Step 4: Initialize Liza
 
 ```bash
-~/.claude/scripts/liza-init.sh "Build hello CLI per specs/vision.md"
+~/.claude/scripts/liza-init.sh "Build hello CLI" specs/vision.md
 ```
 
 This creates:

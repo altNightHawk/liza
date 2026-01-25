@@ -264,15 +264,17 @@ See [Worktree Management — Integration-Fix Ownership](worktree-management.md#i
 
 Before agents can run, human must initialize the project:
 
-1. **Write vision:** Create `specs/vision.md` from template
-   - Copy from `templates/vision-template.md`
+1. **Write goal spec:** Create a goal specification document
+   - Default location: `specs/vision.md` (copy from `templates/vision-template.md`)
+   - Alternative: Use a custom path for feature-specific goals
    - Fill in goal context and success criteria
    - Planner cannot decompose goal without this document
 
-2. **Initialize Liza state:** `liza-init.sh "Goal description"`
-   - Requires `specs/vision.md` to exist first
+2. **Initialize Liza state:** `liza-init.sh "Goal description" [spec_ref]`
+   - `spec_ref` defaults to `specs/vision.md` if not provided
+   - Requires the spec file to exist at the specified path
    - Creates `.liza/` directory structure
-   - Creates `state.yaml` with goal and sprint initialized
+   - Creates `state.yaml` with goal (including `spec_ref`) and sprint initialized
    - Creates `log.yaml`
 
 3. **Start watcher:** `liza-watch.sh` in separate terminal
@@ -312,9 +314,11 @@ Before agents can run, human must initialize the project:
 
 1. Extract task ID and worktree path from bootstrap prompt
 2. Verify assignment in state.yaml (status CLAIMED, assigned_to matches self)
-3. Read specs relevant to task (using task's `spec_ref`)
-4. If task under-specified (no clear spec) → BLOCKED with clarifying questions (see [Blocking Protocol](../architecture/roles.md#blocking-protocol))
-5. Enter worktree, begin iteration loop
+3. Read the **full task entry** from blackboard (all fields: description, done_when, scope, iteration, rejection_reason, etc.)
+4. Read specs relevant to task (using task's `spec_ref`)
+5. **For iteration 2+:** Read and address prior `rejection_reason` (extracted into prompt by supervisor)
+6. If task under-specified (no clear spec) → BLOCKED with clarifying questions (see [Blocking Protocol](../architecture/roles.md#blocking-protocol))
+7. Enter worktree, begin iteration loop
 
 ### Code Reviewer Initialization
 
@@ -323,9 +327,11 @@ Before agents can run, human must initialize the project:
 1. Extract review task ID and worktree path from bootstrap prompt
 2. Verify assignment in state.yaml (status READY_FOR_REVIEW, reviewing_by matches self)
 3. Verify commit SHA matches worktree HEAD
-4. Read specs relevant to task (using task's `spec_ref`)
-5. Examine worktree, validate against spec and `done_when` criteria, run validations, produce verdict
-6. On approval: execute merge
+4. Read the **full task entry** from blackboard (all fields including prior `rejection_reason` for iteration 2+)
+5. Read specs relevant to task (using task's `spec_ref`)
+6. Examine worktree, validate against spec and `done_when` criteria, run validations, produce verdict
+7. **For iteration 2+:** Compare current submission against prior rejection — report which issues are RESOLVED, STILL PRESENT, or PARTIAL
+8. On approval: execute merge
 
 ## Related Documents
 

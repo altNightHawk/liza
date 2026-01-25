@@ -157,7 +157,12 @@ See [DEMO](DEMO.md) for a full example.
 **1. Initialize**
 ```bash
 # Create .liza/ directory with blackboard
-~/.claude/scripts/liza-init.sh "[Goal description]"
+~/.claude/scripts/liza-init.sh "[Goal description]" [spec_ref]
+
+# spec_ref: Path to goal specification (default: specs/vision.md)
+# Examples:
+#   liza-init.sh "Implement retry logic"                    # uses specs/vision.md
+#   liza-init.sh "Add auth" specs/auth-feature.md           # uses custom spec
 
 # Verify
 cat .liza/state.yaml
@@ -225,7 +230,7 @@ The supervisor (`liza-agent.sh`) uses helper scripts for state transitions:
 | `liza-validate.sh <state.yaml>` | Validate blackboard state against schema invariants |
 | `liza-watch.sh` | Monitor blackboard and alert on anomalies |
 | `liza-checkpoint.sh <message>` | Create a checkpoint (halt + summary) |
-| `liza-init.sh <goal>` | Initialize .liza/ directory with blackboard |
+| `liza-init.sh <goal> [spec_ref]` | Initialize .liza/ directory with blackboard (spec_ref defaults to specs/vision.md) |
 
 **Important:** The supervisor claims tasks *before* starting the Claude agent. This avoids interactive permission prompts in `-p` (non-interactive) mode. Agents receive their assigned task in the bootstrap prompt and should NOT call claim scripts directly.
 

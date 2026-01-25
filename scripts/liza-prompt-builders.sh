@@ -3,7 +3,9 @@
 # Build base bootstrap prompt (outputs to stdout)
 build_base_prompt() {
     local goal_desc
-    goal_desc=$(yq -r '.goal.description' "$STATE" 2>/dev/null || echo "See specs/vision.md")
+    goal_desc=$(yq -r '.goal.description' "$STATE" 2>/dev/null || echo "See goal spec")
+    local goal_spec_ref
+    goal_spec_ref=$(yq -r '.goal.spec_ref // "specs/vision.md"' "$STATE" 2>/dev/null)
     local role_title
     role_title=$(echo "$ROLE" | tr '-' ' ' | sed 's/\b\w/\u&/g')
 
@@ -43,13 +45,17 @@ FIRST ACTIONS:
 1. Read your role definition from roles.md
 2. Read the current blackboard state: $STATE
 3. Read your assigned task's FULL entry from the blackboard (all fields, not just description)
-4. Read specs/vision.md in the project for the goal details
+4. Read the goal spec: $goal_spec_ref
 5. Execute your role's protocol - write directly to the blackboard
 EOF
 }
 
 # Build planner context (outputs to stdout)
 build_planner_context() {
+    # Get goal spec ref for instructions
+    local goal_spec_ref
+    goal_spec_ref=$(yq -r '.goal.spec_ref // "specs/vision.md"' "$STATE" 2>/dev/null)
+
     # Compute sprint state
     local total_tasks
     total_tasks=$(yq '.tasks | length' "$STATE" 2>/dev/null || echo 0)
@@ -103,10 +109,10 @@ EOF
     # Context-specific instructions based on wake trigger
     case "$wake_trigger" in
         INITIAL_PLANNING)
-            cat << 'EOF'
+            cat << EOF
 This is initial planning. Decompose the goal into tasks:
 
-1. Read specs/vision.md thoroughly — understand the goal, constraints, success criteria
+1. Read the goal spec ($goal_spec_ref) thoroughly — understand the goal, constraints, success criteria
 
 2. Identify the minimal set of tasks that achieve the goal
 

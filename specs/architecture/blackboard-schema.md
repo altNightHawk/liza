@@ -45,6 +45,7 @@ version: 1
 goal:
   id: goal-1
   description: "Implement retry logic for all API calls with exponential backoff"
+  spec_ref: specs/vision.md  # Path to goal specification document
   created: 2025-01-17T14:00:00Z
   status: IN_PROGRESS  # Goal status: IN_PROGRESS, COMPLETED, ABORTED (no CHECKPOINT — goals span sprints)
   alignment_history:  # Append-only — preserves drift trajectory through rescopes
