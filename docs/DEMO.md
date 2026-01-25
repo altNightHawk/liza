@@ -10,7 +10,8 @@ This walkthrough demonstrates Liza orchestrating a multi-agent system to build a
 
 ## Prerequisites
 
-See [USAGE](USAGE.md) for the full setup.
+See [USAGE](USAGE.md#activation-of-the-contract-for-pairing-agents) for the pre-requisite setup.
+
 ---
 
 ## Step 1: Create Project Repository
@@ -19,42 +20,6 @@ See [USAGE](USAGE.md) for the full setup.
 mkdir hello-cli && cd hello-cli
 git init
 ```
-
-**Configure Permissions** so the agents may run headless:
-
-`.claude/settings.local.json`:
-```json
-{
-  "permissions": {
-    "defaultMode": "acceptEdits",
-    "allow": [
-      "Skill(code-cleaning)",
-      "Skill(code-review)",
-      "Skill(debugging)",
-      "Skill(software-architecture-review)",
-      "Skill(spec-review)",
-      "Skill(systemic-thinking)",
-      "Skill(testing)",
-      "Bash(git:*)",
-      "Bash(yq:*)",
-      "Bash(pre-commit:*)",
-      "Bash(python:*)",
-      "Bash(python3:*)",
-      "Bash(pytest:*)",
-      "Bash(shellcheck:*)",
-      "Bash(bash:*)",
-      "Bash(ls:*)",
-      "Bash(cat:*)",
-      "Bash(head:*)",
-      "Bash(tail:*)",
-      "Bash(wc:*)",
-      "Bash(date:*)",
-      "Bash(~/.claude/scripts/*)"
-    ]
-  }
-}
-```
-You may need to add more allowed tools. Refer to "Debug a stuck agent interactively" below to identify the blocking commands.
 
 ---
 
