@@ -91,8 +91,28 @@ tasks:
     review_commit: b2c3d4e5
     spec_ref: specs/retry-logic.md
     done_when: "OrderAPI.create_order() retries only after idempotency key validation"
-    rejection_reason: "Retry should not apply to non-idempotent POST. Add idempotency check first. See spec section 3.2."
+    rejection_reason: |
+      Blockers: 1
+      - [blocker] src/api/order.py:47 — Retry applied to non-idempotent POST
+        Why it matters: Duplicate orders on network retry
+        Suggestion: Add idempotency key validation before retry. See spec section 3.2.
+
+      Concerns: 0
+
+      Overall: Core retry logic is correct but cannot be applied to POST without idempotency.
+
+      Prior Feedback Status:
+      - RESOLVED: Missing test coverage (now has unit tests)
+      - STILL PRESENT: Idempotency check missing
     created: 2025-01-17T14:05:00Z
+    history:
+      - { time: "2025-01-17T14:05:00Z", event: "created" }
+      - { time: "2025-01-17T14:06:00Z", event: "claimed", agent: "coder-1" }
+      - { time: "2025-01-17T14:20:00Z", event: "ready_for_review", commit: "a1b2c3d4" }
+      - { time: "2025-01-17T14:25:00Z", event: "rejected", agent: "code-reviewer-1", reason: "Blockers: 2\n- [blocker] Missing tests\n- [blocker] Idempotency check missing" }
+      - { time: "2025-01-17T14:26:00Z", event: "reclaimed_after_rejection", agent: "coder-1" }
+      - { time: "2025-01-17T14:40:00Z", event: "ready_for_review", commit: "b2c3d4e5" }
+      - { time: "2025-01-17T14:45:00Z", event: "rejected", agent: "code-reviewer-1", reason: "Blockers: 1\n- [blocker] Idempotency check still missing\n\nPrior Feedback Status:\n- RESOLVED: Missing tests\n- STILL PRESENT: Idempotency check" }
 
   - id: task-3
     description: "Add retry decorator to PaymentAPI.charge()"
@@ -233,6 +253,44 @@ Tasks track two review cycle counters:
 **Rationale:** Difficult tasks requiring coder reassignment should not penalize the replacement coder with inherited review budget. A task reassigned after 3 rejections would otherwise leave only 2 cycles before deadlock, creating a self-fulfilling prophecy that reassigned tasks require rescoping.
 
 **Limit checks use `review_cycles_current`; retrospectives use `review_cycles_total`.**
+
+### Rejection Reason Format
+
+The `rejection_reason` field uses a structured format derived from the code-review skill:
+
+```yaml
+rejection_reason: |
+  Blockers: [count]
+  - [blocker] file:line — Issue description
+    Why it matters: [impact]
+    Suggestion: [fix]
+
+  Concerns: [count]
+  - [concern] file:line — Issue description
+
+  Overall: [1-2 sentence assessment]
+
+  Prior Feedback Status:  # Required for iteration 2+
+  - RESOLVED: [issues from prior rejection now fixed]
+  - STILL PRESENT: [issues not addressed]
+  - PARTIAL: [issues partially addressed]
+```
+
+**Requirements:**
+- Blockers and Concerns must reference specific `file:line` locations
+- Each issue must include actionable suggestion
+- For iteration 2+: Prior Feedback Status section is mandatory
+
+**Rationale:** Structured format enables:
+- Coder to address specific locations rather than interpreting prose
+- Reviewer to track feedback continuity across iterations
+- Watcher to detect oscillation patterns (issue flip-flopping between RESOLVED and STILL PRESENT)
+
+**History tracking:** Rejection events in task history include the full `reason` field for audit trail:
+```yaml
+history:
+  - { time: "...", event: "rejected", agent: "code-reviewer-1", reason: "Blockers: 1\n- [blocker] ..." }
+```
 
 ### Task Dependencies
 

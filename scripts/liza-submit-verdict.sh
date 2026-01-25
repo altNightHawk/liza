@@ -40,9 +40,13 @@ TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 if [ "$VERDICT" = "APPROVED" ]; then
     verdict_patch=".status = \"APPROVED\" | .approved_by = \"$LIZA_AGENT_ID\" | .rejection_reason = null"
     event_name="approved"
+    # Approved: simple history entry
+    history_entry="{\"time\": \"$TIMESTAMP\", \"event\": \"$event_name\", \"agent\": \"$LIZA_AGENT_ID\"}"
 else
     verdict_patch=".status = \"REJECTED\" | .rejection_reason = strenv(REJECTION_REASON)"
     event_name="rejected"
+    # Rejected: include reason in history for oscillation tracking
+    history_entry="{\"time\": \"$TIMESTAMP\", \"event\": \"$event_name\", \"agent\": \"$LIZA_AGENT_ID\", \"reason\": strenv(REJECTION_REASON)}"
 fi
 
 REJECTION_REASON="$REJECTION_REASON" "$SCRIPT_DIR/liza-lock.sh" modify "
@@ -50,9 +54,5 @@ REJECTION_REASON="$REJECTION_REASON" "$SCRIPT_DIR/liza-lock.sh" modify "
     ($verdict_patch |
      .reviewing_by = null |
      .review_lease_expires = null |
-     .history = ((.history // []) + [{
-       \"time\": \"$TIMESTAMP\",
-       \"event\": \"$event_name\",
-       \"agent\": \"$LIZA_AGENT_ID\"
-     }]))' $STATE
+     .history = ((.history // []) + [$history_entry]))' $STATE
 "

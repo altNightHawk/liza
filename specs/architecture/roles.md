@@ -305,10 +305,29 @@ Code Reviewer does NOT evaluate:
 
 ### Binding Verdict Rules
 
+**Rejection must use structured format** (from code-review skill):
+```
+Blockers: [count]
+- [blocker] file:line — Issue description
+  Why it matters: [impact]
+  Suggestion: [fix]
+
+Concerns: [count]
+- [concern] file:line — Issue description
+
+Overall: [1-2 sentence assessment]
+
+Prior Feedback Status:  # Required for iteration 2+
+- RESOLVED: [issues from prior rejection now fixed]
+- STILL PRESENT: [issues not addressed]
+- PARTIAL: [issues partially addressed]
+```
+
 **Rejection must include:**
-- Specific file and location
+- Specific file and location (`file:line` format)
 - Specific defect or missing requirement (reference spec if applicable)
 - Actionable fix description (what to change, not just "this is wrong")
+- **For iteration 2+:** Prior Feedback Status section comparing to previous rejection
 
 **Coder must address the specific feedback:**
 - Cannot reinterpret rejection

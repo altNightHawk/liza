@@ -42,8 +42,9 @@ FORBIDDEN:
 FIRST ACTIONS:
 1. Read your role definition from roles.md
 2. Read the current blackboard state: $STATE
-3. Read specs/vision.md in the project for the goal details
-4. Execute your role's protocol - write directly to the blackboard
+3. Read your assigned task's FULL entry from the blackboard (all fields, not just description)
+4. Read specs/vision.md in the project for the goal details
+5. Execute your role's protocol - write directly to the blackboard
 EOF
 }
 
@@ -205,12 +206,17 @@ build_coder_context() {
     task_done_when=$(get_task_field "$CLAIMED_TASK_ID" "done_when")
     local task_scope
     task_scope=$(get_task_field "$CLAIMED_TASK_ID" "scope")
+    local task_iteration
+    task_iteration=$(get_task_field "$CLAIMED_TASK_ID" "iteration")
+    local task_rejection_reason
+    task_rejection_reason=$(get_task_field "$CLAIMED_TASK_ID" "rejection_reason")
 
     cat << EOF
 
 === ASSIGNED TASK ===
 TASK ID: $CLAIMED_TASK_ID
 WORKTREE: $PROJECT_ROOT/$CLAIMED_WORKTREE
+ITERATION: ${task_iteration:-1}
 DESCRIPTION: $task_desc
 
 DONE WHEN:
@@ -218,6 +224,18 @@ $task_done_when
 
 SCOPE:
 $task_scope
+EOF
+
+    # Display prior rejection feedback for iteration 2+
+    if [ "${task_iteration:-1}" -gt 1 ] && [ -n "$task_rejection_reason" ] && [ "$task_rejection_reason" != "null" ]; then
+        cat << EOF
+
+=== PRIOR REJECTION FEEDBACK (MUST ADDRESS) ===
+$task_rejection_reason
+EOF
+    fi
+
+    cat << EOF
 
 INSTRUCTIONS:
 - The task is already CLAIMED for you. Do NOT run liza-claim-task.sh.
@@ -241,6 +259,10 @@ build_reviewer_context() {
     task_assigned_to=$(get_task_field "$REVIEW_TASK_ID" "assigned_to")
     local task_base_commit
     task_base_commit=$(get_task_field "$REVIEW_TASK_ID" "base_commit")
+    local task_iteration
+    task_iteration=$(get_task_field "$REVIEW_TASK_ID" "iteration")
+    local task_prior_rejection
+    task_prior_rejection=$(get_task_field "$REVIEW_TASK_ID" "rejection_reason")
 
     cat << EOF
 
@@ -250,10 +272,23 @@ WORKTREE: $PROJECT_ROOT/$REVIEW_WORKTREE
 BASE COMMIT: $task_base_commit
 REVIEW COMMIT: $REVIEW_COMMIT
 AUTHOR: $task_assigned_to
+ITERATION: ${task_iteration:-1}
 DESCRIPTION: $task_desc
 
 DONE WHEN:
 $task_done_when
+EOF
+
+    # Display prior rejection for iteration 2+ (enables feedback continuity)
+    if [ "${task_iteration:-1}" -gt 1 ] && [ -n "$task_prior_rejection" ] && [ "$task_prior_rejection" != "null" ]; then
+        cat << EOF
+
+=== PRIOR REJECTION (iteration $((task_iteration - 1))) ===
+$task_prior_rejection
+EOF
+    fi
+
+    cat << EOF
 
 INSTRUCTIONS:
 - The task is already assigned to you for review.
@@ -266,7 +301,52 @@ INSTRUCTIONS:
 - TDD ENFORCEMENT (code tasks): REJECT if tests are missing or don't cover done_when criteria
 - Exempt: doc-only, config-only, or spec-only tasks (no code = no tests required)
 - Verify the done_when criteria are met AND tests exercise those criteria (for code tasks)
-- If APPROVED/REJECTED: run $SCRIPT_DIR/liza-submit-verdict.sh <task-id> <APPROVED|REJECTED> [rejection_reason]
+EOF
+
+    # Add prior feedback comparison for iteration 2+
+    if [ "${task_iteration:-1}" -gt 1 ] && [ -n "$task_prior_rejection" ] && [ "$task_prior_rejection" != "null" ]; then
+        cat << 'EOF'
+
+PRIOR FEEDBACK REVIEW (MANDATORY for iteration 2+):
+Before submitting verdict, compare this iteration against prior rejection:
+- Which prior issues are now RESOLVED?
+- Which prior issues are STILL PRESENT?
+- Which prior issues are PARTIALLY ADDRESSED?
+Include this assessment in your rejection reason if rejecting.
+EOF
+    fi
+
+    cat << EOF
+
+REJECTION FORMAT (if rejecting):
+Use structured format from code-review skill:
+---
+Blockers: [count]
+- [blocker] file:line — Issue description
+  Why it matters: [impact]
+  Suggestion: [fix]
+
+Concerns: [count]
+- [concern] file:line — Issue description
+
+Overall: [1-2 sentence assessment]
+EOF
+
+    if [ "${task_iteration:-1}" -gt 1 ]; then
+        cat << 'EOF'
+
+Prior Feedback Status:
+- RESOLVED: [list issues from prior rejection now fixed]
+- STILL PRESENT: [list issues not addressed]
+- PARTIAL: [list issues partially addressed]
+EOF
+    fi
+
+    cat << EOF
+---
+
+VERDICT:
+- If APPROVED/REJECTED: run $SCRIPT_DIR/liza-submit-verdict.sh <task-id> <APPROVED|REJECTED> "<rejection_reason>"
   (atomically updates verdict, review fields, and history; approved sets approved_by)
 - Always update your agent status to IDLE when done
 EOF
