@@ -49,10 +49,5 @@ else
     history_entry="{\"time\": \"$TIMESTAMP\", \"event\": \"$event_name\", \"agent\": \"$LIZA_AGENT_ID\", \"reason\": strenv(REJECTION_REASON)}"
 fi
 
-REJECTION_REASON="$REJECTION_REASON" "$SCRIPT_DIR/liza-lock.sh" modify "
-  yq -i '(.tasks[] | select(.id == \"$TASK_ID\")) |=
-    ($verdict_patch |
-     .reviewing_by = null |
-     .review_lease_expires = null |
-     .history = ((.history // []) + [$history_entry]))' $STATE
-"
+REJECTION_REASON="$REJECTION_REASON" "$SCRIPT_DIR/liza-lock.sh" modify \
+  yq -i "(.tasks[] | select(.id == \"$TASK_ID\")) |= ($verdict_patch | .reviewing_by = null | .review_lease_expires = null | .history = ((.history // []) + [$history_entry]))" "$STATE"

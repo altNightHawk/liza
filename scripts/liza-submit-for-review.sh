@@ -23,13 +23,5 @@ PROJECT_ROOT=$(git rev-parse --show-toplevel)
 STATE="$PROJECT_ROOT/.liza/state.yaml"
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
-"$SCRIPT_DIR/liza-lock.sh" modify "
-  yq -i '(.tasks[] | select(.id == \"$TASK_ID\")) |=
-    (.status = \"READY_FOR_REVIEW\" |
-     .review_commit = \"$COMMIT_SHA\" |
-     .history = ((.history // []) + [{
-       \"time\": \"$TIMESTAMP\",
-       \"event\": \"submitted_for_review\",
-       \"agent\": \"$LIZA_AGENT_ID\"
-     }]))' $STATE
-"
+"$SCRIPT_DIR/liza-lock.sh" modify \
+  yq -i "(.tasks[] | select(.id == \"$TASK_ID\")) |= (.status = \"READY_FOR_REVIEW\" | .review_commit = \"$COMMIT_SHA\" | .history = ((.history // []) + [{\"time\": \"$TIMESTAMP\", \"event\": \"submitted_for_review\", \"agent\": \"$LIZA_AGENT_ID\"}]))" "$STATE"
