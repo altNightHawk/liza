@@ -137,7 +137,7 @@ This is initial planning. Decompose the goal into tasks:
    - id: short kebab-case identifier (e.g., "add-auth-middleware")
    - description: what to build (1-2 sentences)
    - done_when: observable completion criteria (testable, specific)
-   - scope: files/modules to touch, what's in/out of scope
+   - scope: functional area and boundaries (in/out), not file names — coders decide structure
    - priority: 1 (highest) to 5 (lowest)
    - depends_on: [task-ids] that must be MERGED before this task can be claimed
    - spec_ref: path to relevant spec section

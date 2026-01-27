@@ -62,7 +62,7 @@ All roles must:
 |------|-------------|
 | Spec reference | Each task must cite `spec_ref` pointing to relevant spec section |
 | Success criteria | Each task must have falsifiable `done_when` statement |
-| Scope boundary | Each task must state what is explicitly IN scope |
+| Scope boundary | Each task must state what is explicitly IN scope (functional area, not file names — file structure is the coder's decision) |
 | Dependency check | If task depends on another, state the dependency |
 | TDD inclusion | Code tasks include tests — do NOT create separate "add tests" tasks (exempt: doc/config/spec-only) |
 
