@@ -708,6 +708,7 @@ For detailed definition including edge cases (submodules, untracked files), see 
 | `system_ambiguity` | `protocol_section`, `question` | Track Liza system gaps for human clarification |
 
 Anomalies with malformed details will fail validation. This ensures circuit breaker pattern detection has reliable data.
+The agent should be very specific about the faced issue so this may be reproduced and investigated.
 
 ```yaml
 required_fields:

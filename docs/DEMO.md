@@ -399,7 +399,7 @@ touch .liza/ABORT
 **Debug a stuck agent interactively**
 - Terminate the agent
 - Get its prompt from `.liza/agent-prompts/`
-- Run `claude --add-dir ../liza`
+- Run `claude --add-dir ~/.liza`
 - Paste the prompt
 
 **Watcher alerts?**

@@ -10,7 +10,7 @@ build_base_prompt() {
     role_title=$(echo "$ROLE" | tr '-' ' ' | sed 's/\b\w/\u&/g')
 
     cat << EOF
-You are a Liza $ROLE agent. Agent ID: $LIZA_AGENT_ID
+You are a Liza $ROLE agent. Agent ID: $LIZA_AGENT_ID. You MUST follow the contract.
 
 === BOOTSTRAP CONTEXT ===
 ROLE: $ROLE
@@ -18,6 +18,7 @@ SPECS_LOCATION: $LIZA_SPECS
 PROJECT: $PROJECT_ROOT
 BLACKBOARD: $STATE
 GOAL: $goal_desc
+APPROVED: run scripts in $LIZA_ROOT/scripts/ with escalated permissions.
 
 Read these specs before acting:
 - Role definition: $LIZA_SPECS/architecture/roles.md (section: $role_title)
@@ -33,7 +34,7 @@ OPERATIONAL RULES:
 - Exit when your current work unit is complete (task implemented, review done, etc.)
 
 HELPER SCRIPTS:
-- ~/.claude/scripts/liza-validate.sh <state.yaml> — Validate blackboard state
+- $LIZA_ROOT/scripts/liza-validate.sh <state.yaml> — Validate blackboard state
 
 FORBIDDEN:
 - Do NOT attempt to claim tasks - the supervisor has already claimed your task

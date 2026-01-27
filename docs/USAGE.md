@@ -12,7 +12,8 @@ See [DEMO](DEMO.md) for a full example.
 
 **Prerequisites:**
 - Claude Code CLI, git and `yq` installed
-- `yq` installed (YAML processor)
+- `yq` installed (YAML processor):
+  `sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/local/bin/yq && sudo  chmod +x /usr/local/bin/yq` (dont use snap, codex cannot use it)
 
 **1. Initialize**
 ```bash

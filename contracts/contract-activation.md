@@ -16,6 +16,7 @@ ln -s $LIZA_DIR/contracts/AGENT_TOOLS.md
 ln -s $LIZA_DIR/contracts/COLLABORATION_CONTINUITY.md
 ln -s $LIZA_DIR/skills
 ln -s $LIZA_DIR/scripts
+ln -s $LIZA_DIR/specs
 ```
 
 ## Claude
@@ -193,5 +194,5 @@ writable_roots = ["/home/<USER>/.codex", "/home/<USER>/.pyenv/shims", "/home/<US
 
 [mcp_servers.filesystem]
 command = "npx"
-args = ["-y", "@modelcontextprotocol/server-filesystem", "/home/tangi/.claude", "/home/tangi/.codex", "/home/tangi/Workspace"]
+args = ["-y", "@modelcontextprotocol/server-filesystem", "/home/tangi/.claude", "/home/tangi/.codex", "/home/tangi/Workspace", "/home/tangi/.liza", ]
 ```

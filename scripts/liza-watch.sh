@@ -269,7 +269,7 @@ check_immediate_discoveries() {
 
 check_validity() {
     local validation_output
-    if ! validation_output=$(~/.claude/scripts/liza-validate.sh "$STATE" 2>&1); then
+    if ! validation_output=$(~/.liza/scripts/liza-validate.sh "$STATE" 2>&1); then
         log_alert "🚨 INVALID STATE:" "$validation_output"
     fi
 }
