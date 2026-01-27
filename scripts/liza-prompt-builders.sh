@@ -18,7 +18,7 @@ SPECS_LOCATION: $LIZA_SPECS
 PROJECT: $PROJECT_ROOT
 BLACKBOARD: $STATE
 GOAL: $goal_desc
-APPROVED: run scripts in $LIZA_ROOT/scripts/ with escalated permissions.
+APPROVED: run scripts in $SCRIPT_DIR/ with escalated permissions.
 
 Read these specs before acting:
 - Role definition: $LIZA_SPECS/architecture/roles.md (section: $role_title)
@@ -29,13 +29,17 @@ Read these specs before acting:
 OPERATIONAL RULES:
 - You have FULL read/write access to .liza/ directory - USE IT DIRECTLY
 - Do NOT ask for permission textually - just use Edit/Write tools
-- The human will see tool permission prompts from Claude Code if needed
+- The human will see tool permission prompts from CLI if needed
 - Work autonomously: read specs, execute protocol, write to blackboard
 - Exit when your current work unit is complete (task implemented, review done, etc.)
 
-HELPER SCRIPTS:
-- $LIZA_ROOT/scripts/liza-add-task.sh — Add task to blackboard (Planner only)
-- $LIZA_ROOT/scripts/liza-validate.sh <state.yaml> — Validate blackboard state
+HELPER SCRIPTS (all roles):
+- $SCRIPT_DIR/liza-validate.sh <state.yaml> — Validate blackboard state
+- $SCRIPT_DIR/liza-lock.sh <read|write|modify> — Atomic blackboard ops
+  Examples:
+    $SCRIPT_DIR/liza-lock.sh read
+    $SCRIPT_DIR/liza-lock.sh write '.goal.status' IN_PROGRESS
+    $SCRIPT_DIR/liza-lock.sh modify env FOO=bar yq -i '.foo = strenv(FOO)' .liza/state.yaml
 
 FORBIDDEN:
 - Do NOT attempt to claim tasks - the supervisor has already claimed your task
@@ -105,6 +109,11 @@ SPRINT STATE:
 - Hypothesis exhausted: $hypothesis_exhausted
 - Immediate discoveries: $immediate_discoveries
 
+PLANNER SCRIPTS:
+- $SCRIPT_DIR/liza-add-task.sh — Add task to blackboard (atomic, with validation)
+  Usage: liza-add-task.sh --id ID --desc "..." --spec SPEC --done "..." --scope "..." [--priority N] [--depends "a,b"]
+- $SCRIPT_DIR/wt-delete.sh <task-id> — Delete worktree for abandoned/superseded/blocked tasks
+
 INSTRUCTIONS:
 EOF
 
@@ -151,7 +160,7 @@ This is initial planning. Decompose the goal into tasks:
    - A task is "small" if one coder can complete it in one session
 
 8. Write each task to the blackboard using the add-task script:
-   $LIZA_ROOT/scripts/liza-add-task.sh \\
+   $SCRIPT_DIR/liza-add-task.sh \\
      --id <task-id> \\
      --desc "<description>" \\
      --spec <spec_ref> \\
@@ -253,6 +262,10 @@ EOF
 
     cat << EOF
 
+CODER SCRIPTS:
+- $SCRIPT_DIR/liza-submit-for-review.sh <task-id> <commit-sha>
+  Atomically sets READY_FOR_REVIEW, review_commit, and appends history entry.
+
 INSTRUCTIONS:
 - The task is already CLAIMED for you. Do NOT run liza-claim-task.sh.
 - Work ONLY in the worktree directory: cd $PROJECT_ROOT/$CLAIMED_WORKTREE
@@ -261,7 +274,6 @@ INSTRUCTIONS:
 - Exempt: doc-only, config-only, or spec-only tasks (no code = no tests required)
 - Use the clean-code skill at the end of the implementation
 - When complete, run: $SCRIPT_DIR/liza-submit-for-review.sh <task-id> <commit-sha>
-  (atomically sets READY_FOR_REVIEW, review_commit, and history)
 EOF
 }
 
@@ -305,6 +317,10 @@ EOF
     fi
 
     cat << EOF
+
+REVIEWER SCRIPTS:
+- $SCRIPT_DIR/liza-submit-verdict.sh <task-id> <APPROVED|REJECTED> ["rejection_reason"]
+  Atomically updates verdict, review fields, and history. APPROVED sets approved_by.
 
 INSTRUCTIONS:
 - The task is already assigned to you for review.
@@ -362,8 +378,7 @@ EOF
 ---
 
 VERDICT:
-- If APPROVED/REJECTED: run $SCRIPT_DIR/liza-submit-verdict.sh <task-id> <APPROVED|REJECTED> "<rejection_reason>"
-  (atomically updates verdict, review fields, and history; approved sets approved_by)
+- Run: $SCRIPT_DIR/liza-submit-verdict.sh <task-id> <APPROVED|REJECTED> "<rejection_reason>"
 - Always update your agent status to IDLE when done
 EOF
 }
