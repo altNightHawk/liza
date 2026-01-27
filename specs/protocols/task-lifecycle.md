@@ -139,11 +139,11 @@ When merge fails (INTEGRATION_FAILED):
 
 ```bash
 # Claim integration-fix task
-~/.liza/scripts/liza-lock.sh modify "
-  yq -i '(.tasks[] | select(.id == \"task-3\" and .status == \"INTEGRATION_FAILED\")) |=
-    (.status = \"CLAIMED\" | .assigned_to = \"coder-2\" | .integration_fix = true |
-     .lease_expires = \"$(date -u -d '+5 minutes' +%Y-%m-%dT%H:%M:%SZ)\")' .liza/state.yaml
-"
+LEASE=$(date -u -d '+5 minutes' +%Y-%m-%dT%H:%M:%SZ)
+~/.liza/scripts/liza-lock.sh modify \
+  env LEASE="$LEASE" yq -i '(.tasks[] | select(.id == "task-3" and .status == "INTEGRATION_FAILED")) |=
+    (.status = "CLAIMED" | .assigned_to = "coder-2" | .integration_fix = true |
+     .lease_expires = strenv(LEASE))' .liza/state.yaml
 ```
 
 ---

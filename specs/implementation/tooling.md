@@ -141,21 +141,19 @@ This pattern ensures no task is ever in CLAIMED state without a valid worktree.
 $SCRIPT_DIR/liza-submit-for-review.sh task-3 a1b2c3d
 
 # Log spec change (when human updates specs)
-~/.liza/scripts/liza-lock.sh modify "
-  yq -i '.spec_changes += [{
-    \"timestamp\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",
-    \"spec\": \"specs/retry-logic.md#auth\",
-    \"change\": \"Added auth token refresh retry behavior\",
-    \"triggered_by\": \"task-4a\"
+TS=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+~/.liza/scripts/liza-lock.sh modify \
+  env TS="$TS" yq -i '.spec_changes += [{
+    "timestamp": strenv(TS),
+    "spec": "specs/retry-logic.md#auth",
+    "change": "Added auth token refresh retry behavior",
+    "triggered_by": "task-4a"
   }]' .liza/state.yaml
-"
 
 # Finalize DRAFT → UNCLAIMED (Planner only, after defining all required fields)
-~/.liza/scripts/liza-lock.sh modify "
-  yq -i '(.tasks[] | select(.id == \"task-3\" and .status == \"DRAFT\")) |=
+~/.liza/scripts/liza-lock.sh modify yq -i '(.tasks[] | select(.id == "task-3" and .status == "DRAFT")) |=
     select(.done_when != null and .spec_ref != null) |
-    .status = \"UNCLAIMED\"' .liza/state.yaml
-"
+    .status = "UNCLAIMED"' .liza/state.yaml
 # Note: The select() ensures task has required fields before finalization
 ```
 
@@ -327,8 +325,8 @@ liza-init.sh "Goal description"
 **liza-lock.sh** — Atomic blackboard operations
 ```bash
 liza-lock.sh read                    # Print current state
-liza-lock.sh write field value       # Set field (yq syntax)
-liza-lock.sh modify "script"         # Run script with lock held
+liza-lock.sh write field value       # Set field (yq syntax, value passed via env)
+liza-lock.sh modify <cmd> [args...]  # Run command with lock held (no shell)
 ```
 
 **liza-validate.sh** — Validate blackboard state

@@ -3,8 +3,8 @@
 # Usage: liza-lock.sh <read|write|modify> [args...]
 #
 # liza-lock.sh read                    # Print current state
-# liza-lock.sh write field value       # Set field (yq syntax)
-# liza-lock.sh modify "command"        # Run command with lock held
+# liza-lock.sh write field value       # Set field (yq syntax, value passed via env)
+# liza-lock.sh modify <cmd> [args...]  # Run command with lock held (no shell)
 #
 # Exit codes:
 #   0: Success
@@ -22,9 +22,8 @@ readonly LOCK_TIMEOUT=10
 
 # --- Helper Functions ---
 
-acquire_lock() {
-    local cmd="$1"
-    if ! flock -x -w "$LOCK_TIMEOUT" "$LOCK" -c "$cmd"; then
+acquire_lock_cmd() {
+    if ! flock -x -w "$LOCK_TIMEOUT" "$LOCK" "$@"; then
         echo "Error: Lock acquisition failed (timeout after ${LOCK_TIMEOUT}s)" >&2
         exit 2
     fi
@@ -39,11 +38,15 @@ case "${1:-}" in
     write)
         field="$2"
         value="$3"
-        acquire_lock "yq -i '$field = \"$value\"' '$STATE'"
+        acquire_lock_cmd env VALUE="$value" yq -i "$field = strenv(VALUE)" "$STATE"
         ;;
     modify)
-        cmd="$2"
-        acquire_lock "$cmd"
+        shift
+        if [ "$#" -lt 1 ]; then
+            echo "Usage: liza-lock.sh modify <cmd> [args...]" >&2
+            exit 1
+        fi
+        acquire_lock_cmd "$@"
         ;;
     *)
         echo "Usage: liza-lock.sh <read|write|modify> [args...]" >&2
