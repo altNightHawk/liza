@@ -215,3 +215,15 @@ Blast Radius: [Low: internal refactor | Medium: logic change | High: migration/p
 Confidence: [high: thorough review | medium: focused on key areas | low: quick pass]
 Next step: [e.g., "Merge after addressing minor suggestions" | "Let me know when ready for another look"]
 ```
+
+# Mode-Specific Behavior
+
+**Pairing mode (default):** All interactive prompts apply as written. "Adjust?" allows human to override review mode.
+
+**Liza mode (multi-agent):** Agents operate autonomously — no interactive prompts.
+
+| Pairing Prompt | Liza Behavior |
+|----------------|---------------|
+| Mode announcement ("Adjust?") | Announce mode, no prompt |
+| "Ask the author" / "Clarify before reviewing" | Check task spec and blackboard for context; if still unclear, note as `[question]` in verdict |
+| "Consider suggesting a split" | Note as `[concern]` in verdict — do not block review |

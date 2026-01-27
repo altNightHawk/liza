@@ -283,6 +283,8 @@ When overlapping with other skills (e.g., code review), apply all relevant persp
 
 MANDATORY: read and comply with ~/.liza/AGENT_TOOLS.md.
 
+Do not make any edits to files without first presenting the proposed changes as a diff for user review and explicit approval.
+
 ---
 
 ## Context Management

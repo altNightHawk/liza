@@ -248,6 +248,28 @@ Equal priority — apply contextually.
 - Over-compaction (optimizing for line count at expense of readability)
 - Premature flattening (inlining abstractions that exist for clarity, even if used once)
 
+# Mode-Specific Behavior
+
+**Pairing mode (default):** All approval prompts apply as written above. User confirms each batch, chooses action on test failure, and approves scope propagation.
+
+**Liza mode (multi-agent):** Agents operate autonomously — no interactive prompts.
+
+| Pairing Prompt | Liza Behavior |
+|----------------|---------------|
+| Mode announcement ("Override?") | Announce mode, no prompt |
+| Pre-flight summary ("Proceed (P)?") | Auto-proceed if all checks pass; abort if any fail |
+| Batch approval ("Proceed with batch 1 (P)?") | Auto-proceed |
+| Await approval (between transformations) | Apply directly |
+| Test failure ("(R)evert / (I)nvestigate / (F)orce continue") | Auto-revert batch |
+| Between batches ("Proceed (P) / Skip (S) / Stop (X)?") | Auto-proceed |
+| Propagation to unstaged files | Auto-proceed within worktree scope |
+| Public API changes | Allowed within task scope |
+| Diff size guard (>500 lines) | Abort — log anomaly to blackboard |
+
+Anti-pattern overrides in Liza mode:
+- "without user approval" → "without task scope authorization" (the task definition provides scope)
+- "explicit approval" for propagation/API changes → task scope serves as authorization
+
 # Integration
 
 **Position in workflow:**

@@ -1,7 +1,6 @@
 # Tools for Coding Agents
 
 - Here is the sub-contract for tool usage by coding agents.
-- Do not make any edits to files without first presenting the proposed changes as a diff for user review and explicit approval.
 
 ## Forbidden tools
 
