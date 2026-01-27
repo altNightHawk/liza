@@ -631,6 +631,23 @@ while true; do
     prompt_log="$prompt_dir/${LIZA_AGENT_ID}-${prompt_ts}.txt"
     cp "$PROMPT_FILE" "$prompt_log"
     echo "Prompt saved: $prompt_log"
+
+    # Start background heartbeat to extend lease while agent runs
+    HEARTBEAT_INTERVAL=$(get_config heartbeat_interval 60)
+    LEASE_DURATION=$(get_config lease_duration 1800)
+    (
+        while true; do
+            sleep "$HEARTBEAT_INTERVAL"
+            now=$(iso_timestamp)
+            new_lease=$(iso_timestamp_offset "+${LEASE_DURATION} seconds")
+            locked_yq "
+                .agents.\"$LIZA_AGENT_ID\".heartbeat = \"$now\" |
+                .agents.\"$LIZA_AGENT_ID\".lease_expires = \"$new_lease\"
+            " 2>/dev/null || true
+        done
+    ) &
+    HEARTBEAT_PID=$!
+
     case "$CLI" in
         claude)
             LIZA_AGENT_ID="$LIZA_AGENT_ID" claude --add-dir "$LIZA_ROOT" -p "$(cat "$PROMPT_FILE")"
@@ -640,6 +657,10 @@ while true; do
             ;;
     esac
     EXIT_CODE=$?
+
+    # Stop heartbeat background process
+    kill "$HEARTBEAT_PID" 2>/dev/null; wait "$HEARTBEAT_PID" 2>/dev/null || true
+
     rm -f "$PROMPT_FILE"
     set -e
 
