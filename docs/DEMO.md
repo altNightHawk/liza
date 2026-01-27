@@ -59,18 +59,60 @@ EOF
 
 ---
 
-## Step 3: Initial Commit
+## Step 3: Configure Dev Tooling
 
-Liza works on a git repository. Commit the initial spec:
+Liza agents expect pre-commit and test coverage tooling. Set these up before the first commit.
 
 ```bash
-git add .
-git commit -m "Initial commit: vision spec"
+cat > requirements-dev.txt << 'EOF'
+pytest>=7.0
+pytest-cov>=4.0
+diff-cover>=7.0
+EOF
+
+pip install -r requirements-dev.txt
+```
+
+Create a minimal `.pre-commit-config.yaml`:
+
+```bash
+cat > .pre-commit-config.yaml << 'EOF'
+default_stages: [pre-commit]
+fail_fast: false
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.7
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+EOF
+
+pre-commit install
 ```
 
 ---
 
-## Step 4: Initialize Liza
+## Step 4: Initial Commit
+
+Liza works on a git repository. Commit the initial spec and tooling:
+
+```bash
+git add .
+git commit -m "Initial commit: vision spec and dev tooling"
+```
+
+---
+
+## Step 5: Initialize Liza
 
 ```bash
 ~/.liza/scripts/liza-init.sh "Build hello CLI" specs/vision.md
@@ -101,7 +143,7 @@ agents: {}
 
 ---
 
-## Step 5: Start the Watcher (Terminal 1)
+## Step 6: Start the Watcher (Terminal 1)
 
 Open a terminal for monitoring:
 
@@ -114,7 +156,7 @@ This monitors for anomalies and alerts. Leave it running.
 
 ---
 
-## Step 6: Start the Planner (Terminal 2)
+## Step 7: Start the Planner (Terminal 2)
 
 ```bash
 cd hello-cli
@@ -140,7 +182,7 @@ Expected tasks (Planner decides, but likely):
 
 ---
 
-## Step 7: Start the Coder (Terminal 3)
+## Step 8: Start the Coder (Terminal 3)
 
 Once UNCLAIMED tasks appear:
 
@@ -163,7 +205,7 @@ ls -la .worktrees/
 
 ---
 
-## Step 8: Start the Code Reviewer (Terminal 4)
+## Step 9: Start the Code Reviewer (Terminal 4)
 
 ```bash
 cd hello-cli
@@ -178,7 +220,7 @@ The Code Reviewer will:
 
 ---
 
-## Step 9: Observe the Flow
+## Step 10: Observe the Flow
 
 With all three agents running, watch the system:
 
@@ -239,7 +281,7 @@ watch -n 10 'git log integration --oneline 2>/dev/null || echo "No merges yet"'
 
 ---
 
-## Step 10: Verify Results
+## Step 11: Verify Results
 
 Once all tasks reach MERGED status:
 
