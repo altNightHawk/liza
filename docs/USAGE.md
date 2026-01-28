@@ -96,4 +96,6 @@ The supervisor (`liza-agent.sh`) uses helper scripts for state transitions:
 
 **Important:** The supervisor claims tasks *before* starting the Claude agent. This avoids interactive permission prompts in `-p` (non-interactive) mode. Agents receive their assigned task in the bootstrap prompt and should NOT call claim scripts directly.
 
+**Note on `liza-lock.sh`:** Use `write` only for simple field assignments. For array appends or multi-field updates, use `modify` with `yq -i` and `strenv()`/`env()` for shell variables.
+
 See [Architecture Overview](../specs/architecture/overview.md) for detailed component descriptions.

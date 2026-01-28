@@ -348,6 +348,23 @@ liza-lock.sh write field value       # Set field (yq syntax, value passed via en
 liza-lock.sh modify <cmd> [args...]  # Run command with lock held (no shell)
 ```
 
+**Write limitations:** `write` is only for simple field assignments (string values). It does not support array appends or complex yq expressions. Use `modify` for anything beyond `path = "value"`.
+
+**Modify examples (safe patterns):**
+```bash
+# Append to anomalies
+NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+~/.liza/scripts/liza-lock.sh modify \
+  env NOW="$NOW" yq -i '.anomalies += [{"timestamp": strenv(NOW), "reporter": "agent-id", "type": "system_ambiguity", "details": "..." }]' \
+  .liza/state.yaml
+
+# Update a task by id
+TASK_ID="task-3"
+~/.liza/scripts/liza-lock.sh modify \
+  env TASK_ID="$TASK_ID" yq -i '(.tasks[] | select(.id == strenv(TASK_ID))) |= .status = "READY_FOR_REVIEW"' \
+  .liza/state.yaml
+```
+
 **liza-validate.sh** — Validate blackboard state
 ```bash
 liza-validate.sh [state.yaml]
