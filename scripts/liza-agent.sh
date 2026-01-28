@@ -10,15 +10,17 @@ readonly CRASH_DELAY=5
 
 # --- Argument Parsing ---
 CLI="claude"
+INTERACTIVE=false
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --cli) CLI="$2"; shift 2 ;;
+        -i|--interactive) INTERACTIVE=true; shift ;;
         *) break ;;
     esac
 done
 
 if [[ -z "${1:-}" ]]; then
-    echo "Usage: liza-agent.sh [--cli claude|codex|gemini|mistral] <role> [initial-task-id]" >&2
+    echo "Usage: liza-agent.sh [--cli claude|codex|gemini|mistral] [-i|--interactive] <role> [initial-task-id]" >&2
     exit 1
 fi
 
@@ -27,6 +29,7 @@ case "$CLI" in
     *) echo "Error: --cli must be 'claude', 'codex', 'gemini', or 'mistral', got '$CLI'" >&2; exit 1 ;;
 esac
 readonly CLI
+readonly INTERACTIVE
 
 # --- Path Setup ---
 # Normalize role: CODE_REVIEWER → code-reviewer, "Code Reviewer" → code-reviewer
@@ -662,20 +665,35 @@ while true; do
     ) &
     HEARTBEAT_PID=$!
 
+    OPTION_ARG=""
+    PROMPT_ARG=""
+    if [ "$INTERACTIVE" != true ]; then
+        case "$CLI" in
+            codex)
+                OPTION_ARG="exec"
+                ;;
+            *)
+                OPTION_ARG="-p"
+                ;;
+        esac
+        PROMPT_ARG="$(cat "$PROMPT_FILE")"
+    else
+        echo "Interactive mode: prompt saved at $prompt_log"
+        echo "Copy/paste the prompt from the file above to start the agent."
+    fi
     case "$CLI" in
-        claude)
-            LIZA_AGENT_ID="$LIZA_AGENT_ID" claude -p "$(cat "$PROMPT_FILE")"
-            ;;
-        codex)
-            LIZA_AGENT_ID="$LIZA_AGENT_ID" codex exec "$(cat "$PROMPT_FILE")"
-            ;;
-        gemini)
-            LIZA_AGENT_ID="$LIZA_AGENT_ID" gemini -p "$(cat "$PROMPT_FILE")"
-            ;;
         mistral)
-            LIZA_AGENT_ID="$LIZA_AGENT_ID" vibe -p "$(cat "$PROMPT_FILE")"
+            CLI_CMD=vibe
+            ;;
+        *)
+            CLI_CMD=$CLI
             ;;
     esac
+    if [ -n "$PROMPT_ARG" ]; then
+        LIZA_AGENT_ID="$LIZA_AGENT_ID" $CLI_CMD $OPTION_ARG "$PROMPT_ARG"
+    else
+        LIZA_AGENT_ID="$LIZA_AGENT_ID" $CLI_CMD
+    fi
     EXIT_CODE=$?
 
     # Stop heartbeat background process

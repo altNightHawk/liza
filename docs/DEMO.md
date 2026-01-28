@@ -438,10 +438,10 @@ touch .liza/ABORT
 - Check Code Reviewer terminal
 - Verify task is READY_FOR_REVIEW: `yq '.tasks[] | select(.status == "READY_FOR_REVIEW")' .liza/state.yaml`
 
-**Debug a stuck agent interactively**
-- Terminate the agent
+**Debug agent interactively (-i option)**
+- Terminate the agent and release the task: `~/.liza/scripts/release-claim.sh <task-id>> --full --force`
 - Get its prompt from `.liza/agent-prompts/`
-- Run `LIZA_AGENT_ID=<agent-id> claude --add-dir ~/.liza`
+- Run `LIZA_AGENT_ID=<agent-id> ~/.liza/scripts/liza-agent.sh --cli <claude|codex|gemini|mistral> -i <agent-type>`
 - Paste the prompt
 
 Codex is a nice option for debugging too because it displays everything.
