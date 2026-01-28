@@ -195,17 +195,30 @@ Liza is not autonomous. She is accountable.
 
 ## Status
 
-Liza is currently a **detailed implementation plan**.
+Liza is **operational Proof Of Concept** with ongoing refinement.
 
-The contract restructuring, blackboard schema, coordination protocols, and tooling are specified.
+The contract, blackboard schema, coordination protocols, and tooling are implemented.
+Scripts run end-to-end. See `specs/` for the full specification.
 
-Scripts are implemented and the system runs end-to-end, with ongoing refinement of specs and operational protocols.
-See `specs/` for the full specification.
+### Provider Compatibility
 
-Planned improvements:
-- Support of Codex
-- Full documentation (beyond specs)
-- Spec Writer / Spec Reviewer and Architect / Architecture Reviewer, Tech Writer / Doc Reviewer agent pairs + Plan Reviewer
+The contract is a capability test. It requires meta-cognitive machinery — the ability to parse instructions as executable specifications, observe state, and pause at gates.
+
+| Provider | Classification | Notes |
+|----------|----------------|-------|
+| Claude Opus 4.5 | Fully compatible | Reference provider |
+| GPT-5.2-Codex | Fully compatible | Equally capable |
+| Mistral Devstral-2 | Partial | Requires explicit activation and supervision |
+| Gemini 2.5 Flash | Incompatible | Architectural limitation — no prompt-level fix |
+
+See [Model Capability Assessment](docs/demo-benchmark/wrap-up.md) for detailed analysis.
+
+### Planned Improvements
+
+- Spec Writer / Spec Reviewer agent pair
+- Architect / Architecture Reviewer agent pair
+- Tech Writer / Doc Reviewer agent pair
+- Plan Reviewer agent
 
 ## Typical structure of a project using Liza
 
@@ -242,7 +255,7 @@ Target structure:
 
 ## Requirements
 
-- Claude Code (v1 target)
+- Claude Code or Codex CLI (tested: Claude Opus 4.5, GPT-5.2-Codex)
 - Git with worktree support
 - `yq` for YAML processing
 - `flock` for file locking (standard on Linux)
