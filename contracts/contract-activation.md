@@ -43,12 +43,13 @@ In `~/.claude/settings.json`, configure global permissions for tools used across
 
 ```json
 {
-  "additionalDirectories": [ "~/.liza"],
+  "additionalDirectories": [ "~/.liza", "~/Workspace/liza"],
   "permissions": {
     "defaultMode": "acceptEdits",
     "allow": [
       "Read(~/.claude/**)",
       "Read(~/.liza/**)",
+      "Read(~/Workspace/liza/**)",
 
       "Skill(adr-backfill)",
       "Skill(code-cleaning)",
@@ -133,6 +134,8 @@ In `~/.claude/settings.json`, configure global permissions for tools used across
       "Bash(env:*)",
       "Bash(printenv:*)",
       "Bash(gh:*)",
+      "Bash(git add:*)",
+      "Bash(git checkout:*)",
       "Bash(git commit:*)",
       "Bash(git status:*)",
       "Bash(git diff:*)",
@@ -142,6 +145,8 @@ In `~/.claude/settings.json`, configure global permissions for tools used across
       "Bash(git blame:*)",
       "Bash(git ls-files:*)",
       "Bash(git grep:*)",
+      "Bash(git worktree:*)",
+      "Bash(git rev-parse:*)",
       "Bash(pre-commit:*)",
       "Bash(python:*)",
       "Bash(python3:*)",
@@ -200,7 +205,7 @@ sandbox_mode = "workspace-write"
 
 [sandbox_workspace_write]
 network_access = true
-writable_roots = ["/home/<USER>/.codex",  "/home/<USER>/.liza", "/home/<USER>/.pyenv/shims", "/home/<USER>/.cache"]
+writable_roots = ["/home/<USER>/.codex",  "/home/<USER>/.liza", "/home/<USER>/Workspace/liza", "/home/<USER>/.pyenv/shims", "/home/<USER>/.cache"]
 
 [mcp_servers.filesystem]
 command = "npx"
@@ -221,6 +226,19 @@ The contract is followed more strictly if the symlink is created at every repo r
 ```bash
 cd <REPO_ROOT>
 ln -s ~/.liza/CORE.md GEMINI.md
+```
+
+Add to ~/.gemini/settings.json:
+
+```json
+{
+  "context": {
+    "includeDirectories": [
+      "~/.liza",
+      "~/Workspace/liza"
+    ]
+  }
+}
 ```
 
 ## Mistral
