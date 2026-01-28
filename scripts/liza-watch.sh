@@ -6,6 +6,7 @@ set -euo pipefail
 
 # --- Configuration ---
 readonly CHECK_INTERVAL=10
+readonly LEASE_GRACE_PERIOD=120  # seconds after expiry before alerting (allows heartbeat to extend)
 
 # --- Path Setup ---
 PROJECT_ROOT="${1:-$(git rev-parse --show-toplevel)}"
@@ -56,7 +57,7 @@ check_expired_leases() {
         if [ -n "$lease" ] && [ "$lease" != "null" ]; then
             local lease_epoch
             lease_epoch=$(to_epoch "$lease")
-            if [ "$now" -gt "$lease_epoch" ]; then
+            if [ "$now" -gt "$((lease_epoch + LEASE_GRACE_PERIOD))" ]; then
                 log_alert "⚠️ LEASE EXPIRED:" "$agent on $task"
             fi
         fi
@@ -72,7 +73,7 @@ check_expired_leases() {
         if [ -n "$lease" ] && [ "$lease" != "null" ]; then
             local lease_epoch
             lease_epoch=$(to_epoch "$lease")
-            if [ "$now" -gt "$lease_epoch" ]; then
+            if [ "$now" -gt "$((lease_epoch + LEASE_GRACE_PERIOD))" ]; then
                 log_alert "⚠️ REVIEW LEASE EXPIRED:" "$reviewer on $task — review can be reclaimed"
             fi
         fi
