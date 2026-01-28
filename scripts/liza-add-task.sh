@@ -77,7 +77,8 @@ SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
 DEP_JSON="[]"
 if [[ -n "$DEPENDS" ]]; then
-  DEP_JSON=$(printf '%s\n' "$DEPENDS" | tr ',' '\n' | yq -n '[inputs | trim | select(length > 0)]' -o=json)
+  DEP_JSON=$(DEPS="$DEPENDS" yq -n \
+    'env(DEPS) | split(",") | map(sub("^\\s+|\\s+$"; "")) | map(select(length > 0))' -o=json)
 fi
 
 export TASK_ID DESC SPEC_REF DONE_WHEN SCOPE PRIORITY DEP_JSON NOW LOG
