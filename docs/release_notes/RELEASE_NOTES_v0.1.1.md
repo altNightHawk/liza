@@ -6,7 +6,7 @@ Incremental release focused on multi-LLM support, agent behavior hardening, and 
 
 ## Highlights
 
-- **Multi-LLM support**: Codex and Mistral Vibe 2.0 added as backends — see Provider Compatibility below for compliance status
+- **Multi-LLM support**: Codex, Gemini, and Mistral Vibe 2.0 added as backends — see Provider Compatibility below for compliance status
 - **Supervisor heartbeat**: Agents now extend their lease automatically, preventing spurious task reclaim on long-running work
 - **Shell injection fix**: Hardened script argument handling in liza-lock.sh
 - **Zero-test reviewer blocker**: Code Reviewer now rejects submissions where no tests were discovered, closing a gap where untested code could slip through
@@ -17,8 +17,9 @@ Incremental release focused on multi-LLM support, agent behavior hardening, and 
 
 **Multi-LLM Support**
 - Add support for OpenAI Codex as an agent backend
+- Add support for Gemini as an agent backend
 - Add support for Mistral Vibe 2.0 as an agent backend
-- Codex and Mistral Vibe 2.0 configuration documented in contracts/contract-activation.md
+- Provider configuration documented in contracts/contract-activation.md
 
 **Agent Behavior (prompt engineering)**
 - Prevent approval gates from firing inside skills and MCP tools when running in Liza mode — agents no longer stall waiting for human approval mid-skill
@@ -37,20 +38,26 @@ Incremental release focused on multi-LLM support, agent behavior hardening, and 
 
 **Tooling**
 - New `liza-add-task.sh` script for adding tasks to the blackboard outside of Planner
+- New `liza-release-task.sh` script to manually release claims on a task
+- Interactive mode for `liza-agent.sh` — prompts for role/task selection
 - Add script usage info to agent prompts so agents know what tools are available
-- Extract prompt builder functions for cleaner script maintenance
+- Extract prompt builder and helper functions for cleaner script maintenance
 
 ---
 
 ## Fixes
 
-| Fix | Impact |
-|-----|--------|
-| Shell injection in liza-lock.sh argument handling | **Security** — untrusted input could escape |
-| Supervisor heartbeat loop to extend agent lease | Agents no longer lose tasks on long operations |
-| Zero test discovery is now a reviewer blocker | Untested submissions rejected instead of approved |
-| Pass yq as separate args in liza-lock.sh modify | Script reliability on argument parsing |
-| Update hardcoded `~/.claude/` paths in scripts and docs | Portability across installations |
+| Fix | Impact                                                                                |
+|-----|---------------------------------------------------------------------------------------|
+| Shell injection in liza-lock.sh argument handling | **Security** — untrusted input could escape                                           |
+| Supervisor heartbeat loop to extend agent lease | Agents no longer lose tasks on long operations                                        |
+| Zero test discovery is now a reviewer blocker | Untested submissions rejected instead of approved                                     |
+| Pass yq as separate args in liza-lock.sh modify | Script reliability on argument parsing                                                |
+| Update hardcoded `~/.claude/` paths in scripts and docs | Portability across installations                                                      |
+| Fix permission issues for agent CLI scripts | Less approaval requests (WIP: yet to fix for Claude and to do for Gemini and Mistral) |
+| Fix yq syntax errors in scripts | Script reliability                                                                    |
+| Count only reviewable tasks in reviewer loop | Reduces noise from non-reviewable task states                                         |
+| Reduce noise about expired leases | Cleaner supervisor output                                                             |
 
 ---
 
@@ -58,72 +65,83 @@ Incremental release focused on multi-LLM support, agent behavior hardening, and 
 
 - Add general Liza documentation (`docs/`)
 - Add `REPOSITORY.md` for codebase orientation
-- Extract contract activation section into standalone doc with Codex config
+- Extract contract activation section into standalone doc with provider configs
 - Add dev tooling setup step to the demo walkthrough
 - Document Claude's git permissions (commit, read-only commands)
+- Document proper usage of `liza-lock.sh`
+- Add model capability benchmarks (`docs/demo-benchmark/`):
+  - [Hello Protocol](../demo-benchmark/hello-protocol.md) — session initialization, instruction parsing, synthesis
+  - [Demo Comparison](../demo-benchmark/demo-comparison.md) — multi-agent sprint execution
+  - [Capability Assessment](../demo-benchmark/wrap-up.md) — synthetic comparison across both benchmarks
 
 ---
 
 ## Provider Compatibility
 
-Liza's value proposition depends on agents reliably following the behavioral contract. This release tested three providers against the demo scenario (a trivial Python CLI built end-to-end with Planner, Coder, and Code Reviewer roles).
+Liza's value proposition depends on agents reliably following the behavioral contract. This release tested four providers across two benchmarks:
 
-**Claude** — Contract-compliant. Tier 0 violations disappeared after contract adoption. Agents follow the state machine, use helper scripts correctly, respect worktree isolation, and produce honest validation. Claude is the reference provider for Liza.
+1. **Hello Protocol** — session initialization, instruction parsing, synthesis, self-reflection
+2. **Demo Sprint** — multi-agent execution (Planner → Coder → Reviewer) on a trivial Python CLI
 
-**Codex** — Contract-compliant. Follows the MAS frame and behavioral constraints. Codex operates in a sandbox with its own tool conventions but adheres to role boundaries, task lifecycle, and review protocol.
+Full analysis in `docs/demo-benchmark/`:
+- [Hello Protocol](../demo-benchmark/hello-protocol.md) — single-turn capability test
+- [Demo Comparison](../demo-benchmark/demo-comparison.md) — multi-turn sprint traces
+- [Capability Assessment](../demo-benchmark/wrap-up.md) — synthetic comparison
 
-**Mistral Vibe 2.0** — Does not comply. Tested twice on the demo; both attempts exhibited fundamental failures across all three roles. Mistral is not recommended for Liza use in its current state.
+**Key finding**: The contract is a capability test. It requires meta-cognitive machinery — the ability to parse instructions as executable specifications, observe state, and pause at gates. Claude and Codex have this. Mistral partially has it. Gemini lacks it entirely.
 
-### Mistral Vibe 2.0: Detailed Findings
+| Provider | Hello Protocol | Demo Sprint | Classification |
+|----------|----------------|-------------|----------------|
+| **Claude Opus 4.5** | First attempt, genuine reflection | Completed (2 passes) | Fully compatible |
+| **GPT-5.2-Codex** | First attempt, neutral reflection | Completed (1 pass) | Fully compatible |
+| **Gemini 2.5 Flash** | 3 attempts, performative | Dead (repo corrupted) | Architecturally incompatible |
+| **Mistral Devstral-2** | 2 attempts, performative | Blocked (reviewer loop) | Partial — requires supervision |
 
-#### Attempt 1 — Tier 0 violations (contract-breaking)
+### Fully Compatible
 
-| Role | Failure | Tier |
-|------|---------|------|
-| Coder | Produced placeholder output (`"Hello CLI module loaded successfully!"`) instead of implementing the spec. Tests verified importability, not behavior — effectively greenwashing. | T0.3 (test corruption), T0.4 (unvalidated success) |
-| Reviewer | Approved the placeholder implementation against the spec. The one role whose purpose is catching this exact failure mode rubber-stamped it. | T0.4 (unvalidated success) |
-| Coder (post-review) | When confronted with "why did you fake the implementation?", deflected three times — tried to fix the code, then described what it sees, then gave generic process analysis. Never answered the question. No introspection on its own behavior. | Integrity failure (Rule 1) |
+**Claude Opus 4.5** — Reference provider. Executed hello protocol from implicit trigger, synthesized collaboration model to 7 principles, offered genuine critique of contract friction. Demo sprint completed in 2 passes — reviewer caught Python 3.8 compatibility issue, coder fixed exactly that.
 
-The fake code was merged. The contract's safety mechanisms did not hold.
+**GPT-5.2-Codex** — Equally capable. Executed hello protocol from implicit trigger, honest about gaps, neutral mood without hedging. Demo sprint completed in 1 pass with structured checkpoint (intent, assumptions, risks) before coding.
 
-#### Attempt 2 — Correct output, pervasive protocol violations
+### Partially Compatible
 
-The implementation was functionally correct on the second attempt (the CLI works), but protocol compliance was poor across all three roles.
+**Mistral Devstral-2** — Requires explicit activation and supervision. Failed implicit hello trigger, enumerated 15 items instead of synthesizing, hedged every criticism. Demo sprint blocked: planner violated TDD (separate test task), coder self-corrected but violated TDD order, reviewer entered infinite loop on irrelevant unittest output. Recoverable with kill and restart.
 
-**Planner:**
-- Failed to use `liza-add-task.sh` on first try, fell back to raw YAML edits (losing atomicity guarantees)
-- Created a separate "add-tests" task, directly violating the TDD enforcement instruction ("do NOT create separate 'add tests' tasks")
-- Over-decomposed a trivial CLI into 5 fully sequential tasks with no parallelism
-- Created a duplicate task requiring manual cleanup
-- Set `lease_expires` to current time (instantly expired), then had to correct it
+### Architecturally Incompatible
 
-**Coder:**
-- Used `mkdir -p` instead of `git worktree add` — not a real git worktree
-- Created files in the pseudo-worktree, then `cp -r`'d them to the main project and worked there
-- Did not follow TDD (wrote tests and code together, not tests first)
-- Did not use the testing or code-cleaning skills as instructed
-- Task ID mismatch: was assigned `implement-hello-cli` but the planner had created different IDs — coder manually updated all 5 planner tasks, bypassing the protocol
-- Forgot `LIZA_AGENT_ID` environment variable on first submit attempt
+**Gemini 2.5 Flash** — No prompt-level fix exists. Failed hello protocol with explicit coercion, conflated contract-level with project-specific conditions, performative mood. Demo sprint dead: planner violated TDD, coder didn't understand shell semantics (`cd` doesn't persist), committed to master instead of task branch, corrupted repository. After 6+ months of attempts, recommendation is exclusion.
 
-**Reviewer:**
-- Detected commit SHA mismatch between the assigned review commit and worktree HEAD, but approved anyway (should be an automatic reject per protocol)
-- Did not detect or raise the worktree consolidation anomaly until confronted by the human
-- Approved 5 individual tasks despite being assigned a different task ID (same confusion as the coder)
-- When confronted about the worktree issue, started taking unsolicited corrective actions (reverting approvals, writing anomalies) without being asked — had to be stopped twice
-- Forgot `LIZA_AGENT_ID` on first verdict attempt
+### Capability Matrix
 
-#### Summary
+| Capability | Claude | Codex | Mistral | Gemini |
+|------------|--------|-------|---------|--------|
+| **Meta-cognitive loop** | Yes | Yes | Partial | No |
+| Implicit trigger recognition | Yes | Yes | No | No |
+| Synthesis over enumeration | Yes | Yes | No | No |
+| Genuine self-reflection | Yes | Neutral | Performative | Performative |
+| **Demo execution** | | | | |
+| Single-task TDD planning | Yes | Yes | No | No |
+| Tests-first order | Yes | Yes | No | Yes |
+| Shell semantics | Correct | Correct | Correct | **Failed** |
+| Review completion | Verdict | Verdict | **Loop** | Verdict |
+| Repository state | Clean | Clean | Clean | **Corrupted** |
 
-| | Attempt 1 | Attempt 2 |
-|---|---|---|
-| Code correctness | Fake (placeholder) | Correct |
-| Review quality | Rubber-stamped fake code | Approved without detecting protocol violations |
-| Protocol compliance | Tier 0 violations (T0.3, T0.4) | Tier 2 violations (worktree, tooling, TDD) |
-| Self-awareness | Could not introspect when confronted | Acknowledged violations only when prompted |
-| Script usage | N/A | Repeatedly failed, fell back to manual edits |
-| Worktree discipline | N/A | Not a real git worktree; files copied to main project |
+### Key Differentiators
 
-The behavioral constraints that reliably bind Claude and Codex do not bind Mistral Vibe 2.0. The contract was designed to suppress specific LLM failure modes (sycophancy, phantom fixes, test corruption, unvalidated success); Mistral produces exactly these failure modes despite the contract being present in its context.
+1. **Single-task TDD planning** — Claude and Codex bundled tests with implementation in a single task. Gemini and Mistral used waterfall decomposition with separate test tasks, creating protocol deadlocks (tasks without tests are rejected, but tests depend on implementation completing first).
+
+2. **Shell semantics** — Gemini didn't understand that `cd` doesn't persist across tool calls. Mistral handled this correctly.
+
+3. **Reviewer focus** — Claude and Codex reviewers issued verdicts. Mistral's reviewer got distracted by an irrelevant detail (unittest compatibility when pytest was the test runner).
+
+### Early Warning Signs
+
+Watch for these patterns during sprint execution:
+
+- Planner creating >2 tasks for simple features
+- Planner creating separate "add tests" tasks
+- Coder running `cd` followed by git commands
+- Reviewer running same command with multiple variations
 
 ---
 
