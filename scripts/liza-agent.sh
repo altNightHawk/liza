@@ -202,6 +202,21 @@ count_claimable_tasks() {
     ' "$STATE" 2>/dev/null || echo 0
 }
 
+# Count reviewable tasks (READY_FOR_REVIEW with no reviewer or expired review lease)
+count_reviewable_tasks() {
+    local now
+    now=$(iso_timestamp)
+    yq -r '
+        [.tasks[] | select(
+            .status == "READY_FOR_REVIEW" and
+            (
+                ((.reviewing_by // null) == null) or
+                ((.reviewing_by // null) != null and (.review_lease_expires // null) != null and .review_lease_expires < "'"$now"'")
+            )
+        )] | length
+    ' "$STATE" 2>/dev/null || echo 0
+}
+
 # Coder: Returns 0 if claimable tasks exist or work pending, 1 if system idle
 wait_for_coder_work() {
     local poll_interval
@@ -362,13 +377,13 @@ wait_for_reviewer_work() {
     while [ "$waited" -lt "$max_wait" ]; do
         check_abort && return 1
 
-        local ready
-        ready=$(count_tasks '.status == "READY_FOR_REVIEW"')
+        local reviewable
+        reviewable=$(count_reviewable_tasks)
         local in_progress
         in_progress=$(count_tasks '.status == "CLAIMED"')
 
-        if [ "$ready" -gt 0 ]; then
-            echo "Found $ready task(s) ready for review."
+        if [ "$reviewable" -gt 0 ]; then
+            echo "Found $reviewable reviewable task(s) ready for review."
             return 0
         fi
 
