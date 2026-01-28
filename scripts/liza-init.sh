@@ -117,7 +117,7 @@ config:
   coder_poll_interval: 30
   coder_max_wait: 1800
   planner_poll_interval: 60
-  planner_max_wait: 600
+  planner_max_wait: 1800
   reviewer_poll_interval: 30
   reviewer_max_wait: 1800
   integration_branch: integration
