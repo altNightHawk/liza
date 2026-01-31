@@ -695,6 +695,8 @@ For detailed definition including edge cases (submodules, untracked files), see 
 | `hypothesis_exhaustion` | Planner | Two coders failed same task, rescope required |
 | `spec_gap` | Planner | Missing spec discovered during planning/rescope |
 | `review_deadlock` | Planner | Coder-Code Reviewer reached max cycles without approval |
+| `review_exhaustion` | Planner | Two reviewers failed to issue verdict on same task |
+| `reviewer_loop` | Code Reviewer | Reviewer stuck in command loop, self-aborted |
 | `system_ambiguity` | Any role | Liza protocol or role definition unclear, escalated to Planner |
 
 **Required Details Fields (validated by liza-validate.sh):**
@@ -705,6 +707,8 @@ For detailed definition including edge cases (submodules, untracked files), see 
 | `trade_off` | `what`, `why`, `debt_created` | Debt accumulation counting |
 | `external_blocker` | `blocker_service` | Aggregation by service for circuit breaker |
 | `assumption_violated` | `assumption`, `reality` | Assumption cascade detection |
+| `reviewer_loop` | `count`, `command_pattern` | Reviewer self-abort on repetitive commands |
+| `review_exhaustion` | `reviewers_failed`, `common_blocker` | Two reviewers failed to complete review |
 | `system_ambiguity` | `protocol_section`, `question` | Track Liza system gaps for human clarification |
 
 Anomalies with malformed details will fail validation. This ensures circuit breaker pattern detection has reliable data.
@@ -741,7 +745,7 @@ invariants:
   - "No two agents assigned to same task"
   - "Task with integration_fix:true must have prior INTEGRATION_FAILED in history"
   - "Task failed_by list must contain unique agent IDs"
-  - "Anomaly type must be one of: retry_loop, trade_off, spec_ambiguity, external_blocker, assumption_violated, scope_deviation, workaround, debt_created, spec_changed, hypothesis_exhaustion, spec_gap, review_deadlock, system_ambiguity"
+  - "Anomaly type must be one of: retry_loop, trade_off, spec_ambiguity, external_blocker, assumption_violated, scope_deviation, workaround, debt_created, spec_changed, hypothesis_exhaustion, spec_gap, review_deadlock, review_exhaustion, reviewer_loop, system_ambiguity"
   # Transition invariants (runtime-enforced, not statically validated)
   # These are enforced by agent behavior and atomic operations during state transitions.
   # liza-validate.sh validates static state invariants; these require history analysis.

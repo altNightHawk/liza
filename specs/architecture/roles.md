@@ -34,6 +34,31 @@ All roles must:
 
 **Rationale:** Specs are complex and imperfect. Silent workarounds compound into systemic drift. Planner escalates to human via CHECKPOINT if system-level clarification needed.
 
+### Loop Detection Self-Abort
+
+If you observe yourself running:
+- The same command more than 3 times, OR
+- Close variations of the same command (same base, different flags/pipes) more than 5 times total
+
+WITHOUT meaningful progress toward your goal, STOP IMMEDIATELY:
+
+1. Log anomaly to blackboard:
+   - Coder/Planner: `retry_loop` with command pattern
+   - Code Reviewer: `reviewer_loop` with command pattern
+2. Take role-appropriate action:
+   - Coder: Mark task BLOCKED with diagnosis of what's not working
+   - Code Reviewer: Issue REJECTED verdict with `"insufficient information to complete review"` and specific blocker
+   - Planner: Log `spec_gap` and pause for human input
+3. Exit with code 42
+
+**"Meaningful progress" means:** New information that changes your next action.
+Piping the same output through different tools hoping for different results is NOT progress.
+
+**Examples of loops to abort:**
+- Running `unittest discover` when tests use pytest (wrong framework)
+- Repeating `grep` with different flags on the same empty result
+- Re-reading the same file expecting different content
+
 ---
 
 ## Planner
@@ -262,6 +287,18 @@ The supervisor sets:
 
 **On verdict submission:** Update task status to APPROVED/REJECTED and clear agent's `current_task`.
 
+### Review Exhaustion
+
+If 2 different Code Reviewers fail to issue a verdict on the same task (exit without APPROVED/REJECTED):
+
+1. Log `review_exhaustion` anomaly with details of what blocked both reviewers
+2. Set task BLOCKED with `blocked_reason: "review_exhaustion: 2 reviewers unable to complete review"`
+3. Planner evaluates: task spec unclear? done_when untestable? missing context?
+
+**"Failed to issue verdict" means:** Agent exited (crash, timeout, loop detection) without calling `liza-submit-verdict.sh`.
+
+**Tracking:** Supervisor tracks review attempts via task history events. Two `review_started` events without corresponding `approved` or `rejected` event triggers this protocol.
+
 ### Code Reviewer Logging Duties
 
 Code Reviewer MUST log to anomalies section:
@@ -274,6 +311,7 @@ Code Reviewer MUST log to anomalies section:
 | Technical debt introduced | `debt_created` |
 | Spec assumption contradicted by code | `assumption_violated` |
 | Spec changed since task creation | `spec_changed` |
+| Own review stuck in command loop | `reviewer_loop` |
 
 Code Reviewer MUST include in rejection:
 - Spec reference (if applicable)

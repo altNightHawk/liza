@@ -8,9 +8,37 @@ Consolidated operational reference for Liza agents. Read your role section befor
 
 ## How to Use This Document
 
-1. Read **Common** sections (Scripts, Blackboard Fields)
+1. Read **Common** sections (Scripts, Blackboard Fields, Loop Detection)
 2. Read **your role section** (Planner, Coder, or Code Reviewer)
 3. Reference **State Transitions** and **Anomaly Types** as needed
+
+---
+
+## Loop Detection Self-Abort
+
+**ALL ROLES:** If you observe yourself running:
+- The same command more than 3 times, OR
+- Close variations (same base, different flags/pipes) more than 5 times total
+
+WITHOUT meaningful progress → **STOP IMMEDIATELY**
+
+**"Meaningful progress"** = new information that changes your next action.
+Piping same output through different tools is NOT progress.
+
+**Action by role:**
+
+| Role | Log As | Then |
+|------|--------|------|
+| Coder | `retry_loop` | Mark task BLOCKED with diagnosis |
+| Code Reviewer | `reviewer_loop` | Issue REJECTED with `"insufficient information to complete review"` |
+| Planner | `spec_gap` | Pause for human input |
+
+Exit with code 42 after logging.
+
+**Examples of loops to abort:**
+- Running `unittest` when tests use `pytest`
+- Repeating `grep` with different flags on empty result
+- Re-reading same file expecting different content
 
 ---
 
@@ -326,6 +354,13 @@ Prior Feedback Status:  # Required for iteration 2+
 | Technical debt introduced | `debt_created` |
 | Spec assumption contradicted | `assumption_violated` |
 | Spec changed since task creation | `spec_changed` |
+| Own review stuck in command loop | `reviewer_loop` |
+
+### Review Exhaustion
+
+If 2 different Code Reviewers fail to issue a verdict on the same task (exit without APPROVED/REJECTED):
+- Task is marked BLOCKED with `blocked_reason: "review_exhaustion"`
+- Planner evaluates: spec unclear? done_when untestable?
 
 ---
 
@@ -390,9 +425,11 @@ Log anomalies as they occur using the `anomalies` section.
 | `workaround` | Reviewer | — |
 | `debt_created` | Reviewer | — |
 | `spec_changed` | Reviewer | — |
+| `reviewer_loop` | Reviewer | `count`, `command_pattern` |
 | `hypothesis_exhaustion` | Planner | — |
 | `spec_gap` | Planner | — |
 | `review_deadlock` | Planner | — |
+| `review_exhaustion` | Planner | `reviewers_failed`, `common_blocker` |
 | `system_ambiguity` | Any | `protocol_section`, `question` |
 
 ---
