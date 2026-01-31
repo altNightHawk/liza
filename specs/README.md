@@ -1,6 +1,6 @@
 # Liza Specification Index
 
-An agent-supervised multi-agent coding system that makes AI agents accountable engineering collaborators, not just autonomous yet unreliable assistants.
+See [Vision](vision.md) for the canonical definition and rationale.
 
 ## Quick Navigation
 
@@ -69,14 +69,7 @@ An agent-supervised multi-agent coding system that makes AI agents accountable e
 
 ### Design Philosophy
 
-> Systems that optimize for immediate output generate muda—defects, rework, and correction loops. By optimizing for trust, quality, and auditability, Liza eliminates these wasted cycles—and should reach completion sooner, not later.
-
-### Cost Gradient
-
-```
-Thought → Words → Specs → Code → Tests → Docs → Commits
-◄─────────────── cheaper ─────────────────────────►
-```
+See [Vision: Why](vision.md#why) for the design philosophy and cost gradient.
 
 ---
 

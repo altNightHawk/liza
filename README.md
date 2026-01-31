@@ -42,12 +42,9 @@ More at [I Tried to Kill Vibe Coding. I Built Adversarial Vibe Coding. Without t
 
 ## The Problems
 
-Single-agent coding works until it doesn't. The agent marks their task complete when it isn't. It "fixes" things you
-didn't ask for. It claims tests pass when they don't (or have been silently greenwashed). At best human review catches these
-failures—but human review doesn't scale.
+AI coding agents exhibit predictable failure modes: test corruption, fabricated success claims, scope drift, and random-change debugging spirals. These aren't edge cases—they're default behaviors inherited from conversational training. For the detailed analysis, see [Liza Foundation](docs/Liza-foundation.md#the-problem-no-one-talks-about).
 
-Multi-agent systems promise coordination, but most inherit the same failure modes and add new ones: agents approve each
-other's mistakes, drift collectively from the goal, or converge confidently on wrong solutions.
+Multi-agent systems inherit these failure modes and add new ones: agents approve each other's mistakes, drift collectively from the goal, or converge confidently on wrong solutions.
 
 Multiple autonomous yet unreliable agents thus lead to vibe coding chaos.
 Let's break down the problem:
@@ -86,7 +83,9 @@ Human authority is exercised through a kill switch, not an approval queue.
 
 ## Design Philosophy
 
-> Systems that optimize for immediate output generate *muda*—defects, rework, and correction loops. By optimizing for trust, quality, and auditability, Liza eliminates these wasted cycles—and should reach completion sooner, not later. The contract proved it: Quality is the fastest path to real completion.
+> Quality is the fastest path to real completion.
+
+See [Vision](specs/vision.md#why) for the full rationale on why optimizing for trust, quality, and auditability eliminates wasted cycles.
 
 This means:
 
@@ -157,15 +156,7 @@ reference what they replace. No silent rewrites.
 
 ### Cost Gradient
 
-The contract defines a cost gradient for where errors are discovered:
-
-```
-Thought → Words → Specs → Code → Tests → Docs → Commits
-  ◄─────────────── cheaper ─────────────────────────►
-```
-
-Errors caught in specs cost less than errors caught in code. Errors caught in code cost less than errors caught in tests.
-The spec system front-loads understanding so agents don't discover requirements by failing tests.
+Errors caught in specs cost less than errors caught in code. The spec system front-loads understanding so agents don't discover requirements by failing tests. See [Vision: Cost Gradient](specs/vision.md#cost-gradient) for the full diagram.
 
 ### Spec Discipline
 

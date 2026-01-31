@@ -2,7 +2,7 @@
 
 ## What
 
-An agent-supervised multi-agent coding system that makes AI agents accountable engineering collaborators, not merely autonomous but unreliable assistants.
+A disciplined peer-supervised multi-agent coding system that makes AI agents accountable engineering peers, not unreliable yet autonomous assistants.
 
 Liza combines four ideas:
 - **Behavioral contracts** for per-agent discipline—Tier 0 invariants are never violated
@@ -15,6 +15,8 @@ Liza combines four ideas:
 Single-agent coding works until it doesn't. The agent marks their task complete when it isn't. It "fixes" things you didn't ask for. It claims tests pass when they don't (or have been silently greenwashed). At best human review catches these failures—but human review doesn't scale.
 
 Multi-agent systems promise coordination, but most inherit the same failure modes and add new ones: agents approve each other's mistakes, drift collectively from the goal, or converge confidently on broken solutions.
+
+For the detailed analysis of agent failure modes and why typical guidelines fail, see [Liza Foundation](../docs/Liza-foundation.md).
 
 > Systems that optimize for immediate output generate muda—defects, rework, and correction loops. By optimizing for trust, quality, and auditability, Liza eliminates these wasted cycles—and should reach completion sooner, not later.
 >
