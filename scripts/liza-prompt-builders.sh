@@ -20,11 +20,8 @@ BLACKBOARD: $STATE
 GOAL: $goal_desc
 APPROVED: run scripts in $SCRIPT_DIR/ with escalated permissions.
 
-Read these specs before acting:
-- Role definition: $LIZA_SPECS/architecture/roles.md (section: $role_title)
-- Task lifecycle: $LIZA_SPECS/protocols/task-lifecycle.md
-- Blackboard schema: $LIZA_SPECS/architecture/blackboard-schema.md
-- State machines: $LIZA_SPECS/architecture/state-machines.md
+Read before acting:
+- Agent runtime reference: $PROJECT_ROOT/docs/for-agent-eyes/agent-runtime-reference.md (section: $role_title)
 
 OPERATIONAL RULES:
 - You have FULL read/write access to .liza/ directory - USE IT DIRECTLY
@@ -48,7 +45,7 @@ FORBIDDEN:
 - Do NOT make architecture decisions - follow the spec exactly
 
 FIRST ACTIONS:
-1. Read your role definition from roles.md
+1. Read the agent runtime reference (your role section)
 2. Read the current blackboard state: $STATE
 3. Read your assigned task's FULL entry from the blackboard (all fields, not just description)
 4. Read the goal spec: $goal_spec_ref

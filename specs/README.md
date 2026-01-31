@@ -16,7 +16,7 @@ An agent-supervised multi-agent coding system that makes AI agents accountable e
 | [Roles](architecture/roles.md)                         | Planner, Coder, Code Reviewer responsibilities |
 | [State Machines](architecture/state-machines.md)       | Task states, agent states, exit codes |
 | [Blackboard Schema](architecture/blackboard-schema.md) | state.yaml structure, locking, operations |
-| [ADR/](specs/architecture/ADR/)                                     | Architecture Decision Records (created as decisions arise) |
+| [ADR/](architecture/ADR/)                              | Architecture Decision Records (created as decisions arise) |
 
 ### Protocols
 
@@ -96,3 +96,22 @@ Thought → Words → Specs → Code → Tests → Docs → Commits
 | Protocols | 4 | Complete |
 | Implementation | 4 | Complete |
 | Contracts | 4 | Pending extraction |
+
+---
+
+## Maintenance Notes
+
+### Agent Runtime Reference
+
+[`docs/for-agent-eyes/agent-runtime-reference.md`](../docs/for-agent-eyes/agent-runtime-reference.md) is a consolidated reference for agents at runtime. It distills operational content from multiple specs into a single doc agents read during bootstrap.
+
+**Sync requirement:** When updating these specs, check if the agent runtime reference needs corresponding updates:
+
+| Spec | Agent reference sections affected |
+|------|-----------------------------------|
+| `roles.md` | Role-specific sections (capabilities, constraints, protocols) |
+| `blackboard-schema.md` | Field reference tables |
+| `state-machines.md` | State transitions tables |
+| `task-lifecycle.md` | Iteration protocol, blocking protocol, handoff |
+
+The specs contain rationale and design context; the runtime reference contains only what agents need to act.
