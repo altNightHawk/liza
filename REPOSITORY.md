@@ -129,8 +129,7 @@ User-facing documentation.
 | `DEMO.md`                             | Full end-to-end walkthrough |
 | `../contracts/contract-activation.md` | How to activate the contract for pairing mode |
 | `TROUBLESHOOTING.md`                  | Common issues and fixes |
-| `Liza-foundation.md`                  | Core concepts and philosophy (internal) |
-| `Liza-summary.md`                     | Why behavioral contracts vs. process frameworks (internal) |
+| `Liza-foundation.md`                  | Core concepts, philosophy, and framework comparison (internal) |
 | `architectural-issues.md`             | Known architectural concerns |
 | `release_notes/`                      | Version changelogs |
 
