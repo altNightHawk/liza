@@ -1,0 +1,137 @@
+version: 1
+repository: "/home/tangi/Workspace/liza"
+started_at: "2026-02-01T12:00:00Z"
+last_updated: "2026-02-01T12:00:00Z"
+
+file_classification:
+  # Tier 0 - Dependency manifests
+  "pyproject.toml": {tier: 0, category: "dependency_manifest"}
+  "uv.lock": {tier: 0, category: "dependency_manifest"}
+  ".pre-commit-config.yaml": {tier: 0, category: "dev_tooling_deps"}
+
+  # Tier 1 - Infrastructure & Core Structure
+  "contracts/CORE.md": {tier: 1, category: "core_contract"}
+  "contracts/MULTI_AGENT_MODE.md": {tier: 1, category: "core_contract"}
+  "contracts/PAIRING_MODE.md": {tier: 1, category: "core_contract"}
+  "AGENTS.md": {tier: 1, category: "prompt_compliance", note: "symlink to ~/.liza/"}
+  "CLAUDE.md": {tier: 1, category: "prompt_compliance", note: "symlink to ~/.liza/"}
+  "scripts/liza-agent.sh": {tier: 1, category: "agent_entry_point"}
+  "scripts/liza-watch.sh": {tier: 1, category: "supervisor_orchestration"}
+  "scripts/liza-lock.sh": {tier: 1, category: "blackboard_state"}
+  "specs/architecture/*.md": {tier: 1, category: "architecture_specs"}
+  "specs/protocols/*.md": {tier: 1, category: "protocol_specs"}
+
+  # Tier 2 - Skills (explicit Liza usage noted)
+  "skills/code-cleaning/SKILL.md": {tier: 2, category: "skill", liza_explicit: true}
+  "skills/code-review/SKILL.md": {tier: 2, category: "skill", liza_explicit: true}
+  "skills/systemic-thinking/SKILL.md": {tier: 2, category: "skill", liza_explicit: true}
+  "skills/debugging/SKILL.md": {tier: 2, category: "skill"}
+  "skills/testing/SKILL.md": {tier: 2, category: "skill"}
+  "skills/software-architecture-review/SKILL.md": {tier: 2, category: "skill"}
+  "skills/spec-review/SKILL.md": {tier: 2, category: "skill"}
+  "skills/feynman/SKILL.md": {tier: 2, category: "skill"}
+  "skills/adr-backfill/SKILL.md": {tier: 2, category: "skill"}
+  "skills/generic-subagent/SKILL.md": {tier: 2, category: "skill"}
+
+  # Not significant (user confirmed)
+  "contracts/LOADER.md": {tier: null, category: "not_significant", note: "prematurely created, never used"}
+  "docs/Liza-summary.md": {tier: null, category: "not_significant", note: "merged into foundation"}
+
+clusters:
+  # Chronologically ordered
+
+  - id: 1
+    title: "Leverage Proven Contract for MAS"
+    commit_shas: ["ef79c29", "c4e5f4a", "f02ac4a"]
+    date_range: "2026-01-17"
+    confidence: 0.95
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0001-leverage-proven-contract-for-mas.md"
+    user_context:
+      problem: "Human bottleneck in pairing - gates became ceremony"
+      alternatives: "Build from scratch, AutoGen/CrewAI, no contracts"
+      rationale: "Gates force externalized thinking, not human approval specifically"
+      limitations: "Contract weight is cost of production-quality behavior"
+
+  - id: 2
+    title: "Skills as Lean Prompts"
+    commit_shas: ["f02ac4a"]
+    date_range: "2026-01-17"
+    confidence: 0.90
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0002-skills-as-lean-prompts.md"
+    user_context:
+      problem: "Agent prompts become unwieldy with all domain-specific procedures"
+      rationale: "Keep prompts lean, support reusability. Future: marketplace extraction (separate ADR)"
+
+  - id: 3
+    title: "Blackboard Coordination Architecture"
+    commit_shas: ["9f91405"]
+    date_range: "2026-01-19"
+    confidence: 0.90
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0003-blackboard-coordination.md"
+
+  - id: 4
+    title: "Dual-Mode Contract Architecture"
+    commit_shas: ["200e4df", "c3f277d"]
+    date_range: "2026-01-20"
+    confidence: 0.95
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0004-dual-mode-contract-architecture.md"
+    user_context:
+      problem: "Approval gates needed blackboard; some sections irrelevant in MAS"
+      alternatives: "Two separate contracts, runtime parameterization"
+      rationale: "Everything not absolutely specific to human stays in CORE"
+      limitations: "Cross-mode prohibition prevents patching complex systems"
+
+  - id: 5
+    title: "Bash Scripts for POC Orchestration"
+    commit_shas: ["0875f71"]
+    date_range: "2026-01-20"
+    confidence: 0.85
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0005-bash-scripts-for-poc.md"
+
+  - id: 6
+    title: "Supervisor-Assigns-Work Model"
+    commit_shas: ["30892c8", "42d32fa", "1e3731b"]
+    date_range: "2026-01-20 to 2026-01-21"
+    confidence: 0.85
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0006-supervisor-assigns-work.md"
+
+  - id: 7
+    title: "TDD Enforcement in MAS"
+    commit_shas: ["d45249e"]
+    date_range: "2026-01-21"
+    confidence: 0.95
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0007-tdd-enforcement-in-mas.md"
+    user_context:
+      problem: "Coders wrote tests validating implementation, not spec. No human in short loop to catch it."
+      rationale: "Tests first encodes spec intent. Structural prevention vs detection."
+
+  - id: 8
+    title: "Multi-LLM Provider Support"
+    commit_shas: ["26288f4", "413f1c9", "5895bab"]
+    date_range: "2026-01-27 to 2026-01-28"
+    confidence: 0.85
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0008-multi-llm-provider-support.md"
+
+  - id: 9
+    title: "~/.liza as Canonical Contract Root"
+    commit_shas: ["535ba75"]
+    date_range: "2026-01-28"
+    confidence: 0.90
+    status: "adr_generated"
+    adr_path: "specs/architecture/ADR/0009-canonical-contract-root.md"
+
+processing_cursor:
+  step: "ordering"
+  substep: "complete"
+
+configuration:
+  adr_output_dir: "specs/architecture/ADR"
+  adr_format: "madr"
