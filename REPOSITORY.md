@@ -16,6 +16,9 @@ This document is a navigation aid: where to find things and why they're organize
 │
 ├── README.md               # Project overview
 ├── REPOSITORY.md           # This file
+├── AGENTS.md               # Symlink → contracts/CORE.md (for agents, e.g. Codex)
+├── CLAUDE.md               # Symlink → contracts/CORE.md (Claude Code)
+├── GEMINI.md               # Symlink → contracts/CORE.md (Gemini)
 ├── LICENSE                 # Apache 2.0
 ├── pyproject.toml          # Python project config & dependencies
 ├── uv.lock                 # Dependency lock file
@@ -49,6 +52,11 @@ Externalized context that survives agent restarts. Agents read specs before acti
 specs/
 ├── vision.md                           # Philosophy, success criteria, MVP scope
 ├── README.md                           # Reading order and navigation
+├── build/                              # Build specifications (system implementation)
+│   └── 0.md                            # Foundation spec (v0 consolidated)
+├── functional/                         # Functional domain specifications
+│   ├── 0 - Liza.md                     # Liza system overview
+│   └── 1.1.md - 1.6.md                 # Domain-specific specs
 ├── architecture/
 │   ├── overview.md                     # Components, data flow, directory structure
 │   ├── roles.md                        # Planner, Coder, Code Reviewer responsibilities
@@ -80,8 +88,10 @@ Specialized protocols agents load conditionally. Each contains a single `SKILL.m
 | `software-architecture-review/` | Implementation planning, structural concerns |
 | `code-cleaning/` | Pre-commit refactoring (Python-focused) |
 | `spec-review/` | Specification validation |
+| `spec-backfill/` | Extracting specifications from existing code |
 | `generic-subagent/` | Delegating read-only work to subagents |
 | `systemic-thinking/` | Systemic coherence and risk analysis |
+| `adversarial-testing/` | Security and edge-case testing |
 | `adr-backfill/` | Extracting ADRs from git history |
 | `feynman/` | Explaining complex ideas simply |
 
@@ -102,6 +112,7 @@ Shell scripts implementing Liza system mechanics. Agents invoke these; the scrip
 - `liza-watch.sh` — Monitor blackboard, alert on anomalies
 
 **Task management:**
+- `liza-add-task.sh` — Add new task to backlog
 - `liza-claim-task.sh` — Atomically claim a task for a coder
 - `liza-analyze.sh` — Analysis helper
 - `liza-prompt-builders.sh` — Construct prompts from state
@@ -109,7 +120,11 @@ Shell scripts implementing Liza system mechanics. Agents invoke these; the scrip
 **Review & merge:**
 - `liza-submit-for-review.sh` — Atomic review submission
 - `liza-submit-verdict.sh` — Atomic review verdict
+- `release-claim.sh` — Release claim on task or review
 - `clear-stale-review-claims.sh` — Clean up abandoned reviews
+
+**Shared utilities:**
+- `liza-common.sh` — Common functions sourced by other scripts
 
 **Worktree management:**
 - `wt-create.sh` — Create isolated per-task worktree
@@ -123,15 +138,17 @@ Shell scripts implementing Liza system mechanics. Agents invoke these; the scrip
 
 User-facing documentation.
 
-| File                                  | Purpose |
-|---------------------------------------|---------|
-| `USAGE.md`                            | Quick start guide |
-| `DEMO.md`                             | Full end-to-end walkthrough |
-| `../contracts/contract-activation.md` | How to activate the contract for pairing mode |
-| `TROUBLESHOOTING.md`                  | Common issues and fixes |
-| `_archive/Liza-foundation.md`         | (Archived) Merged into `specs/build/0.md` |
-| `architectural-issues.md`             | Known architectural concerns |
-| `release_notes/`                      | Version changelogs |
+| File | Purpose |
+|------|---------|
+| `USAGE.md` | Quick start guide |
+| `DEMO.md` | Full end-to-end walkthrough |
+| `TROUBLESHOOTING.md` | Common issues and fixes |
+| `release_notes/` | Version changelogs |
+| `demo-benchmark/` | Multi-agent demo traces and comparisons |
+| `for-agent-eyes/` | Agent-specific runtime references |
+| `_archive/` | Archived documentation |
+
+Contract activation guide: `contracts/contract-activation.md`
 
 ## templates/
 
@@ -149,7 +166,7 @@ ADR template lives at `specs/architecture/ADR/TEMPLATE.md`.
 For newcomers:
 
 1. `README.md` — What Liza is and why
-2. `specs/vision.md` — Design philosophy and success criteria
+2. `specs/build/0 - Vision.md` — Design philosophy and success criteria
 3. `specs/architecture/overview.md` — System components and data flow
 4. `contracts/CORE.md` — The behavioral contract
 5. `docs/USAGE.md` — How to run it
