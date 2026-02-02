@@ -23,5 +23,10 @@ PROJECT_ROOT=$(get_project_root)
 STATE="$PROJECT_ROOT/.liza/state.yaml"
 TIMESTAMP=$(iso_timestamp)
 
+require_task_exists "$TASK_ID" "$STATE"
+
 "$SCRIPT_DIR/liza-lock.sh" modify \
-  yq -i "(.tasks[] | select(.id == \"$TASK_ID\")) |= (.status = \"READY_FOR_REVIEW\" | .review_commit = \"$COMMIT_SHA\" | .history = ((.history // []) + [{\"time\": \"$TIMESTAMP\", \"event\": \"submitted_for_review\", \"agent\": \"$LIZA_AGENT_ID\"}]))" "$STATE"
+  yq -i "
+    (.tasks[] | select(.id == \"$TASK_ID\")) |= (.status = \"READY_FOR_REVIEW\" | .review_commit = \"$COMMIT_SHA\" | .history = ((.history // []) + [{\"time\": \"$TIMESTAMP\", \"event\": \"submitted_for_review\", \"agent\": \"$LIZA_AGENT_ID\"}])) |
+    .agents.\"$LIZA_AGENT_ID\".status = \"WAITING\"
+  " "$STATE"

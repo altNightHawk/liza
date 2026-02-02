@@ -569,6 +569,28 @@ claim_reviewer_task() {
     return 0
 }
 
+# Planner: Set up working state atomically before agent starts
+# Planners don't claim tasks - they create them. Their "task" is planning itself.
+# Sets status=WORKING and current_task="planning" atomically to satisfy validation.
+setup_planner_state() {
+    local now
+    now=$(iso_timestamp)
+    local lease_seconds
+    lease_seconds=$(get_config lease_duration 1800)
+    local lease
+    lease=$(iso_timestamp_offset "+${lease_seconds} seconds")
+
+    locked_yq "
+        .agents.\"$LIZA_AGENT_ID\".status = \"WORKING\" |
+        .agents.\"$LIZA_AGENT_ID\".current_task = \"planning\" |
+        .agents.\"$LIZA_AGENT_ID\".lease_expires = \"$lease\" |
+        .agents.\"$LIZA_AGENT_ID\".heartbeat = \"$now\"
+    "
+
+    echo "PLANNING: $LIZA_AGENT_ID ready to create/manage tasks"
+    return 0
+}
+
 # --- Main Loop ---
 
 while true; do
@@ -618,6 +640,11 @@ while true; do
             # No task to claim (race condition or none available) - go back to waiting
             continue
         fi
+    fi
+
+    # For planners: set up working state atomically before agent starts
+    if [ "$ROLE" = "planner" ]; then
+        setup_planner_state
     fi
 
     # Build bootstrap prompt
@@ -698,6 +725,14 @@ while true; do
 
     # Stop heartbeat background process
     kill "$HEARTBEAT_PID" 2>/dev/null; wait "$HEARTBEAT_PID" 2>/dev/null || true
+
+    # Reset planner state to IDLE after agent completes
+    if [ "$ROLE" = "planner" ]; then
+        locked_yq "
+            .agents.\"$LIZA_AGENT_ID\".status = \"IDLE\" |
+            .agents.\"$LIZA_AGENT_ID\".current_task = null
+        "
+    fi
 
     rm -f "$PROMPT_FILE"
     set -e

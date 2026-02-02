@@ -112,31 +112,44 @@ The following CORE.md rules have modified behavior in Multi-Agent Mode:
 | **Debugging Protocol** | Read skill, debug with human | Do NOT debug autonomously (see below) |
 | **Context degradation** | Offer checkpoint/reset options | Auto-checkpoint to blackboard, self-terminate |
 
-**Debugging Override:** CORE.md mandates reading the debugging skill. In MAM, agents do NOT debug autonomously beyond quick hypothesis. Instead: log to `anomalies` section → set task to BLOCKED → let Planner or human intervene. Rationale: Autonomous debugging in MAM risks cascading errors across agents.
+**Debugging Override:** CORE.md mandates reading the debugging skill. In MAM, agents do NOT debug autonomously beyond quick hypothesis.
+Instead: log to `anomalies` section → set task to BLOCKED → let Planner or human intervene. Rationale: Autonomous debugging in MAM risks cascading errors across agents.
 
 ## Task State Machine
 
 Task states in the blackboard track the workflow lifecycle:
 
-| From State | To State | Trigger |
-|------------|----------|---------|
-| IDLE | WORKING | Task claimed, checkpoint written |
-| WORKING | READY_FOR_REVIEW | Implementation complete, validation passed |
-| READY_FOR_REVIEW | APPROVED | Code Reviewer approves |
-| READY_FOR_REVIEW | REJECTED | Code Reviewer rejects |
-| REJECTED | WORKING | Same coder re-claims with feedback |
-| APPROVED | MERGED | Code Reviewer merges to integration |
+| State | Description | Next States |
+|-------|-------------|-------------|
+| DRAFT | Planner defining | UNCLAIMED |
+| UNCLAIMED | Ready for claim | CLAIMED |
+| CLAIMED | Coder working | READY_FOR_REVIEW, BLOCKED |
+| READY_FOR_REVIEW | Awaiting review | APPROVED, REJECTED |
+| REJECTED | Feedback provided | CLAIMED |
+| APPROVED | Merge eligible | MERGED, INTEGRATION_FAILED |
+| BLOCKED | Awaiting escalation | UNCLAIMED, SUPERSEDED, ABANDONED |
+| INTEGRATION_FAILED | Merge failed | CLAIMED |
+| MERGED | Terminal | — |
+| SUPERSEDED | Terminal | — |
+| ABANDONED | Terminal | — |
 
-**Forbidden Transitions:**
-- IDLE → READY_FOR_REVIEW (skipping implementation)
-- WORKING → APPROVED (skipping review)
-- WORKING → MERGED (skipping review)
+**Forbidden Task Transitions:**
+- DRAFT → CLAIMED (coders cannot claim drafts)
+- CLAIMED → MERGED (skipping review)
+- CLAIMED → APPROVED (self-approval)
+- Any terminal → Any state
 
 **Stop Triggers:**
 - Spec ambiguity discovered → BLOCKED (escalate to Planner)
 - Assumption budget exceeded → BLOCKED
 - Same rejection reason twice → BLOCKED (escalate)
 - Integration conflict → INTEGRATION_FAILED
+
+**Claimability Rule:**
+```
+claimable = (status in [UNCLAIMED, REJECTED, INTEGRATION_FAILED])
+            AND (depends_on is empty OR all depends_on are MERGED)
+```
 
 ---
 
@@ -213,6 +226,20 @@ blocked_questions:
   - "Is the spec clear enough?"
   - "Should task be decomposed?"
 ```
+
+**Context Exhaustion Handoff (Coder only):**
+At ~90% context (heuristic: many tool calls, re-reading files, difficulty holding state):
+1. STOP at next safe point
+2. Commit pending changes
+3. Run `liza-handoff.sh <task-id> "<summary>" "<next_action>"` (sets handoff_pending, agent status HANDOFF)
+4. Exit with code 42
+
+Supervisor spawns replacement Coder with handoff context from task history.
+
+**Review Exhaustion:**
+If 2 different Code Reviewers fail to issue a verdict on the same task (exit without APPROVED/REJECTED):
+- Task is marked BLOCKED with `blocked_reason: "review_exhaustion"`
+- Planner evaluates: spec unclear? done_when untestable?
 
 ---
 
@@ -315,19 +342,6 @@ Humans intervene via files, not conversation.
 
 ---
 
-## Debugging in Multi-Agent Mode
-
-When an agent encounters unexpected behavior:
-
-1. **Do NOT debug autonomously** beyond quick hypothesis
-2. Log to `anomalies` section
-3. Set task to BLOCKED if cannot proceed
-4. Let Planner or human intervene
-
-Rationale: Autonomous debugging in MAM risks cascading errors across agents.
-
----
-
 ## Differences from Pairing Mode
 
 | Aspect | Pairing Mode | Multi-Agent Mode |
@@ -352,5 +366,22 @@ Automatic halt conditions:
 | Agent crash loop (3× in 5min) | Supervisor stops |
 | Blackboard validation fails | All agents pause |
 | Integration branch conflict | INTEGRATION_FAILED |
+
+**Loop Detection Self-Abort:**
+If an agent observes itself running:
+- The same command more than 3 times, OR
+- Close variations (same base, different flags/pipes) more than 5 times total
+
+WITHOUT meaningful progress → **STOP IMMEDIATELY**
+
+"Meaningful progress" = new information that changes next action. Piping same output through different tools is NOT progress.
+
+| Role | Log As | Then |
+|------|--------|------|
+| Coder | `retry_loop` | Mark task BLOCKED with diagnosis |
+| Code Reviewer | `reviewer_loop` | Issue REJECTED with `"insufficient information to complete review"` |
+| Planner | `spec_gap` | Pause for human input |
+
+Exit with code 42 after logging.
 
 See [specs/protocols/circuit-breaker.md](~/.liza/specs/protocols/circuit-breaker.md) for details.

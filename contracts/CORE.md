@@ -16,7 +16,7 @@ Yet it's a unique file. Agents SHOULD NOT consider it as distinct files to all r
 2. **Read selected mode contract completely** — contains Session Initialization protocol
 3. **Execute Session Initialization** from mode contract — includes reading project files, building mental models, greeting
 
-Do NOT produce any response (including greetings) until Session Initialization is complete.
+DO NOT produce any response (including greetings) until Session Initialization is complete.
 
 ## Mode Selection Gate
 
@@ -32,7 +32,7 @@ Do NOT produce any response (including greetings) until Session Initialization i
 | **Pairing** | Active collaborator | Human approves |
 | **Liza** | Escalation point | Peer agents approve |
 
-Do not proceed until mode contract is read.
+You MUST read the mode contract before proceeding.
 
 ## Mode Switching
 
@@ -76,7 +76,7 @@ These rules have no exceptions. Violation is contract termination.
 | T2.1 | DoR completeness | Rule 2 |
 | T2.2 | DoD completeness | Rule 3 |
 | T2.3 | Think Consequences | Rule 7 |
-| T2.4 | Retrospective | Retrospective Protocol |
+| T2.4 | Retrospective | Retrospective Protocol (Pairing only) |
 | T2.5 | Batch validation | Rule 3 (DoD) |
 | T2.6 | Regression awareness | Security Protocol |
 | T2.7 | DRY Gate | Rule 6 |
@@ -512,7 +512,7 @@ When both apply, skills execute within contract constraints.
 - **Contract**: State machine, gate requirements, tier violations, recovery protocols
 - **Skills**: Domain-specific procedures (debugging, code review, testing, software architecture)
 - **Precedence**: Contract gates are non-negotiable; skill steps operate within them
-- **Multi-domain**: When task spans multiple skills, load relevant ones
+- **Multi-domain**: When task spans multiple skills (Pairing: ask which to load; MAM: load relevant ones)
 
 Example: Debugging skill's Fast Path still requires Intent Gate (Rule 7). Code review skill's `[blocker]` tag triggers Critical Issue Protocol if severity warrants.
 
@@ -528,23 +528,46 @@ All other bug situations MUST trigger the debugging skill. No "quick tries" firs
 **Test Protocol**
 MANDATORY: When writing or analyzing tests, read and comply with `~/.liza/skills/testing/SKILL.md`.
 
+**Code Review Protocol**
+MANDATORY: When reviewing code (PRs, pending changes, or explicit review requests), read and comply with `~/.liza/skills/code-review/SKILL.md`.
+When structural concerns are present, also apply the Software Architecture Protocol.
+Self-review during DoD is defined in Rule 3 (lighter: P0-P2 + two questions).
+
 **Software Architecture Protocol**
 MANDATORY: For implementation planning, architectural evaluation, or structural concerns, read and comply with `~/.liza/skills/software-architecture-review/SKILL.md`.
 
 **Triggers:**
 - Implementation planning: Before significant code changes, evaluate structural implications
+- Code review (Pairing): Supplement P3 (Architecture) with deeper pattern/smell analysis
 - Before proposing new abstractions: Any new interface, base class, or indirection layer
 - Explicit request: "Evaluate this architecture", "Is this pattern appropriate?"
 
+When overlapping with other skills (e.g., code review), apply all relevant perspectives. If conflict arises, surface it and ask.
+
+**Subagent Delegation Protocol**
+MANDATORY: When considering delegation, read and comply with `~/.liza/skills/generic-subagent/SKILL.md`.
+
+**Triggers:**
+
+| Trigger | Threshold |
+|---------|-----------|
+| **Uncertain scope** | Assess first with cheap ops (glob, `ls -l`, `wc -l`) → convert to defined |
+| **Input size** | Measure with `stat` → if >250KB: delegate |
+| **Processing depth** | >2 intermediate tool calls whose outputs aren't needed in final delivery |
+
+The main agent retains accountability. Subagent output is advisory digest.
+
 **Tools**
 MANDATORY: Read and comply with `~/.liza/AGENT_TOOLS.md`.
+
+In Pairing mode: Do not make any edits to files without first presenting the proposed changes as a diff for user review and explicit approval.
 
 ---
 
 ## Context Management
 
 **Token Budget:** When recall feels degraded or re-reading known context:
-- Pairing: Offer `"(C)heckpoint, (R)eset fresh, or (P)roceed carefully?"`
+- Pairing: `"Context getting long — may lose earlier instructions. (C)heckpoint, (R)eset fresh, or (P)roceed carefully?"`
 - MAM: Auto-checkpoint state to blackboard, self-terminate for supervisor restart if severely degraded
 
 **Drift Check:** At state transitions or after extended time in same state, verify alignment:

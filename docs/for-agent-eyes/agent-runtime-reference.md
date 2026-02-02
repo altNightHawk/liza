@@ -1,44 +1,14 @@
 # Agent Runtime Reference
 
-Consolidated operational reference for Liza agents. Read your role section before acting.
-
-**This document is for agents.** For design rationale, see the source specs listed in each section.
+Operational quick-reference for Liza agents. For authoritative protocols, see [MULTI_AGENT_MODE.md](~/.liza/MULTI_AGENT_MODE.md).
 
 ---
 
 ## How to Use This Document
 
-1. Read **Common** sections (Scripts, Blackboard Fields, Loop Detection)
-2. Read **your role section** (Planner, Coder, or Code Reviewer)
-3. Reference **State Transitions** and **Anomaly Types** as needed
-
----
-
-## Loop Detection Self-Abort
-
-**ALL ROLES:** If you observe yourself running:
-- The same command more than 3 times, OR
-- Close variations (same base, different flags/pipes) more than 5 times total
-
-WITHOUT meaningful progress → **STOP IMMEDIATELY**
-
-**"Meaningful progress"** = new information that changes your next action.
-Piping same output through different tools is NOT progress.
-
-**Action by role:**
-
-| Role | Log As | Then |
-|------|--------|------|
-| Coder | `retry_loop` | Mark task BLOCKED with diagnosis |
-| Code Reviewer | `reviewer_loop` | Issue REJECTED with `"insufficient information to complete review"` |
-| Planner | `spec_gap` | Pause for human input |
-
-Exit with code 42 after logging.
-
-**Examples of loops to abort:**
-- Running `unittest` when tests use `pytest`
-- Repeating `grep` with different flags on empty result
-- Re-reading same file expecting different content
+1. Read [MULTI_AGENT_MODE.md](~/.liza/MULTI_AGENT_MODE.md) for protocols (roles, state machine, TDD, iteration, scope)
+2. Read **your role section** below for logging duties and role-specific operations
+3. Reference **Scripts**, **Blackboard Fields**, and **Anomaly Types** as needed
 
 ---
 
@@ -53,8 +23,9 @@ All scripts are in `$SCRIPT_DIR` (passed in bootstrap prompt).
 | `liza-lock.sh modify env VAR=val yq ...` | Complex atomic update | All |
 | `liza-validate.sh <state.yaml>` | Validate blackboard state | All |
 | `liza-add-task.sh` | Add task to blackboard | Planner |
-| `liza-submit-for-review.sh <task-id> <commit>` | Submit for review | Coder |
-| `liza-submit-verdict.sh <task-id> <verdict> [reason]` | Submit review verdict | Code Reviewer |
+| `liza-submit-for-review.sh <task-id> <commit>` | Submit for review (sets agent status WAITING) | Coder |
+| `liza-handoff.sh <task-id> <summary> <next-action>` | Context exhaustion handoff (sets agent status HANDOFF) | Coder |
+| `liza-submit-verdict.sh <task-id> <verdict> [reason]` | Submit review verdict (sets agent status IDLE) | Code Reviewer |
 | `wt-delete.sh <task-id>` | Delete worktree | Planner |
 
 ---
@@ -69,7 +40,7 @@ Location: `.liza/state.yaml`
 |-------|------|--------|-------------|
 | `id` | string | Planner | Unique task identifier (kebab-case) |
 | `description` | string | Planner | What to build (1-2 sentences) |
-| `status` | enum | Various | Current state (see State Transitions) |
+| `status` | enum | Various | Current state (see MAM Task State Machine) |
 | `priority` | int | Planner | 1 (highest) to 5 (lowest) |
 | `spec_ref` | string | Planner | Path to spec, optionally with `#anchor` |
 | `done_when` | string | Planner | Falsifiable completion criteria |
@@ -117,55 +88,7 @@ Location: `.liza/state.yaml`
 
 ## Planner
 
-**Source:** `roles.md#planner`, `task-lifecycle.md`
-
-### Purpose
-
-Decompose goal into tasks. Monitor for blocked states. Rescope when needed.
-
-### Capabilities
-
-- Read specs and docs to understand goal context
-- Write tasks to blackboard (DRAFT → UNCLAIMED)
-- Rescope tasks (split, redefine, kill) with audit trail
-- Reassign tasks after hypothesis exhaustion
-- Mark tasks SUPERSEDED when rescoping
-
-### Constraints
-
-- Cannot claim Coder or Code Reviewer tasks
-- Must append to `goal.alignment_history` after each rescope
-- Rescoping must reference original task and state reason
-- Must ensure specs exist before creating tasks
-
-### Task Definition Gates
-
-Every task requires:
-
-| Gate | Requirement |
-|------|-------------|
-| Spec reference | `spec_ref` pointing to relevant spec section |
-| Success criteria | Falsifiable `done_when` statement |
-| Scope boundary | What is IN scope (functional area, not files) |
-| Dependency check | `depends_on` if task requires another |
-| TDD inclusion | Code tasks include tests (not separate tasks) |
-
-Tasks missing any gate remain DRAFT.
-
-### Wake Triggers
-
-| Trigger | Condition | Action |
-|---------|-----------|--------|
-| Blocked task | `status == BLOCKED` | Evaluate rescope options |
-| Hypothesis exhaustion | `failed_by` has ≥2 coders | Reassign or rescope |
-| Integration failure | `status == INTEGRATION_FAILED` | Create fix task |
-| Immediate discovery | `urgency: immediate` not converted | Evaluate conversion |
-
-### Rescoping Protocol
-
-1. Set original task → `SUPERSEDED`
-2. Create new task(s) with `supersedes: [original-id]` and `rescope_reason`
-3. Log entry with one-sentence root cause
+**Protocols:** See MAM sections: Role Execution, Task State Machine (incl. Claimability Rule), Communication Protocol, Circuit Breaker (Loop Detection).
 
 ### Logging Duties
 
@@ -178,89 +101,7 @@ Tasks missing any gate remain DRAFT.
 
 ## Coder
 
-**Source:** `roles.md#coder`, `task-lifecycle.md`
-
-### Purpose
-
-Implement tasks. Iterate until Code Reviewer approves.
-
-### Capabilities
-
-- Read specs to understand requirements
-- Create/modify code in assigned worktree only
-- Commit to task worktree
-- Request review via `liza-submit-for-review.sh`
-- Address rejection feedback
-- Mark self BLOCKED with diagnosis
-
-### Constraints
-
-- Work only in assigned worktree
-- No modifications outside task scope
-- Cannot self-approve
-- Cannot merge to integration branch
-- Cannot claim under-specified work (trigger BLOCKED instead)
-
-### Iteration Protocol
-
-```
-while not APPROVED and iterations < max:
-    extend_lease()
-    work on task
-    log_anomalies_as_they_occur()
-    if ready:
-        ensure_clean_git_status()
-        liza-submit-for-review.sh <task-id> <commit-sha>
-        exit(42)  # supervisor restarts; re-read blackboard for verdict
-
-if REJECTED:
-    read rejection_reason
-    address specific feedback
-    iterations++
-```
-
-### TDD Requirement
-
-For code tasks:
-1. Write tests FIRST that verify `done_when` criteria
-2. Implement until tests pass
-3. Code Reviewer REJECTS code without tests
-
-Exempt: doc-only, config-only, spec-only tasks.
-
-### Blocking Protocol
-
-When blocking, you MUST provide:
-
-| Field | Required | Content |
-|-------|----------|---------|
-| `blocked_reason` | Yes | Specific blocker (not vague) |
-| `blocked_questions` | Yes | 1-3 questions that would unblock |
-| `attempted` | Recommended | Approaches tried before blocking |
-
-**Do NOT block for:**
-- Questions answerable by reading specs
-- Style/approach preferences
-- Missing nice-to-haves (log to `discovered` instead)
-
-### Discovery Protocol
-
-If you discover an adjacent problem:
-1. Do NOT fix it
-2. Log to `discovered` section with severity and recommendation
-3. Continue with original task
-
-### Context Exhaustion Handoff
-
-At ~90% context (heuristic: many tool calls, re-reading files, difficulty holding state):
-
-1. STOP at next safe point
-2. Commit pending changes
-3. Write handoff to blackboard:
-   - `summary`: 1 phrase — task state
-   - `next_action`: 1 phrase — what replacement should do first
-4. Set `handoff_pending: true` on task
-5. Exit with code 42
+**Protocols:** See MAM sections: Role Execution, Iteration Protocol (incl. Context Exhaustion Handoff), Scope Discipline, TDD Enforcement, Circuit Breaker (Loop Detection).
 
 ### Logging Duties
 
@@ -276,73 +117,7 @@ At ~90% context (heuristic: many tool calls, re-reading files, difficulty holdin
 
 ## Code Reviewer
 
-**Source:** `roles.md#code-reviewer`, `task-lifecycle.md`
-
-### Purpose
-
-Verify coder output. Approve or reject with binding verdict.
-
-### Capabilities
-
-- Read specs to validate against requirements
-- Read task worktree (read-only)
-- Run validation commands
-- Approve or reject via `liza-submit-verdict.sh`
-
-### Constraints
-
-- Cannot modify code in worktree
-- Must cite specific criteria for rejection
-- Cannot reject on style preference
-- Verdict is final for that review cycle
-- Must verify commit SHA matches `review_commit`
-
-### Review Protocol
-
-1. Verify HEAD matches `review_commit`
-2. Review ALL changes: `git diff <base_commit>..<review_commit>`
-3. Validate against current spec (not spec at task creation)
-4. For code tasks: verify tests exist AND cover `done_when`
-
-### Review Scope
-
-**Evaluate:**
-- Does implementation match task definition?
-- Does implementation match spec?
-- Do tests validate specified behavior?
-- Are there obvious defects?
-
-**Do NOT evaluate:**
-- Style preferences
-- Alternative approaches (unless current is defective)
-- Scope expansion opportunities
-
-### Rejection Format
-
-```
-Blockers: [count]
-- [blocker] file:line — Issue description
-  Why it matters: [impact]
-  Suggestion: [fix]
-
-Concerns: [count]
-- [concern] file:line — Issue description
-
-Overall: [1-2 sentence assessment]
-
-Prior Feedback Status:  # Required for iteration 2+
-- RESOLVED: [issues now fixed]
-- STILL PRESENT: [issues not addressed]
-- PARTIAL: [issues partially addressed]
-```
-
-### Approval Means
-
-- Implementation matches task requirements
-- Implementation matches spec
-- Tests validate behavior
-- No obvious defects
-- Clear to merge
+**Protocols:** See MAM sections: Role Execution, Iteration Protocol (incl. Review Exhaustion), Scope Discipline, TDD Enforcement, Circuit Breaker (Loop Detection).
 
 ### Logging Duties
 
@@ -355,58 +130,6 @@ Prior Feedback Status:  # Required for iteration 2+
 | Spec assumption contradicted | `assumption_violated` |
 | Spec changed since task creation | `spec_changed` |
 | Own review stuck in command loop | `reviewer_loop` |
-
-### Review Exhaustion
-
-If 2 different Code Reviewers fail to issue a verdict on the same task (exit without APPROVED/REJECTED):
-- Task is marked BLOCKED with `blocked_reason: "review_exhaustion"`
-- Planner evaluates: spec unclear? done_when untestable?
-
----
-
-## State Transitions
-
-### Task States
-
-| State | Description | Next States |
-|-------|-------------|-------------|
-| DRAFT | Planner defining | UNCLAIMED |
-| UNCLAIMED | Ready for claim | CLAIMED |
-| CLAIMED | Coder working | READY_FOR_REVIEW, BLOCKED |
-| READY_FOR_REVIEW | Awaiting review | APPROVED, REJECTED |
-| REJECTED | Feedback provided | CLAIMED |
-| APPROVED | Merge eligible | MERGED, INTEGRATION_FAILED |
-| BLOCKED | Awaiting escalation | UNCLAIMED, SUPERSEDED, ABANDONED |
-| INTEGRATION_FAILED | Merge failed | CLAIMED |
-| MERGED | Terminal | — |
-| SUPERSEDED | Terminal | — |
-| ABANDONED | Terminal | — |
-
-### Forbidden Transitions
-
-- DRAFT → CLAIMED (coders cannot claim drafts)
-- CLAIMED → MERGED (skipping review)
-- CLAIMED → APPROVED (self-approval)
-- Any terminal → Any state
-
-### Agent States
-
-| State | Description | Roles |
-|-------|-------------|-------|
-| STARTING | Initializing | All |
-| IDLE | No task | All |
-| WORKING | Implementing | Coder |
-| REVIEWING | Reviewing | Code Reviewer |
-| WAITING | Awaiting verdict | Coder |
-| HANDOFF | Context exhaustion | All |
-
-### Exit Codes
-
-| Code | Meaning | Supervisor Action |
-|------|---------|-------------------|
-| 0 | Role complete (no more work) | Stop |
-| 42 | Graceful abort | Restart immediately |
-| Other | Crash | Restart with backoff |
 
 ---
 
@@ -436,19 +159,20 @@ Log anomalies as they occur using the `anomalies` section.
 
 ## Quick Reference
 
-### Claimability Rule
-
-```
-claimable = (status in [UNCLAIMED, REJECTED, INTEGRATION_FAILED])
-            AND (depends_on is empty OR all depends_on are MERGED)
-```
-
 ### Lease Model
 
 - Lease duration: 5 minutes (default)
 - Heartbeat interval: 60 seconds
 - Extend lease before long operations
 - If lease expires, task becomes reclaimable
+
+### Exit Codes
+
+| Code | Meaning | Supervisor Action |
+|------|---------|-------------------|
+| 0 | Role complete (no more work) | Stop agent |
+| 42 | Graceful abort (handoff, loop detected) | Restart immediately |
+| Other | Crash | Restart with backoff |
 
 ### Timestamps
 

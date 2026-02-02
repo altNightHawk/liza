@@ -112,6 +112,8 @@ PLANNER SCRIPTS:
 - $SCRIPT_DIR/wt-delete.sh <task-id> — Delete worktree for abandoned/superseded/blocked tasks
 
 INSTRUCTIONS:
+
+- Your agent status is managed by the supervisor (WORKING on start, IDLE on completion).
 EOF
 
     # Context-specific instructions based on wake trigger
@@ -264,13 +266,15 @@ CODER SCRIPTS:
   Atomically sets READY_FOR_REVIEW, review_commit, and appends history entry.
 
 INSTRUCTIONS:
+- Your agent status is managed by the supervisor (WORKING on claim, WAITING on submit).
 - The task is already CLAIMED for you. Do NOT run liza-claim-task.sh.
 - Work ONLY in the worktree directory: cd $PROJECT_ROOT/$CLAIMED_WORKTREE
 - TDD (code tasks): Write tests FIRST that verify done_when criteria, then implement until tests pass
 - Tests are MANDATORY for code tasks — Code Reviewer will reject code without tests. Use the testing skill.
 - Exempt: doc-only, config-only, or spec-only tasks (no code = no tests required)
 - Use the clean-code skill at the end of the implementation
-- When complete, run: $SCRIPT_DIR/liza-submit-for-review.sh <task-id> <commit-sha>
+- When complete: run $SCRIPT_DIR/liza-submit-for-review.sh <task-id> <commit-sha> (sets status to WAITING)
+- If context exhaustion (~90% capacity): commit work, run $SCRIPT_DIR/liza-handoff.sh <task-id> "<summary>" "<next_action>", exit 42
 EOF
 }
 
@@ -320,6 +324,7 @@ REVIEWER SCRIPTS:
   Atomically updates verdict, review fields, and history. APPROVED sets approved_by.
 
 INSTRUCTIONS:
+- Your agent status is managed by the supervisor (REVIEWING on claim, IDLE on verdict).
 - The task is already assigned to you for review.
 - Verify HEAD matches REVIEW_COMMIT: git -C $PROJECT_ROOT/$REVIEW_WORKTREE rev-parse HEAD. If mismatch, REJECT.
 - Review ALL changes in the worktree (base_commit → review_commit), not just the latest commit.
@@ -376,7 +381,6 @@ EOF
 ---
 
 VERDICT:
-- Run: $SCRIPT_DIR/liza-submit-verdict.sh <task-id> <APPROVED|REJECTED> "<rejection_reason>"
-- Always update your agent status to IDLE when done
+- Run: $SCRIPT_DIR/liza-submit-verdict.sh <task-id> <APPROVED|REJECTED> "<rejection_reason>" (sets status to IDLE)
 EOF
 }

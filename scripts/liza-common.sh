@@ -41,3 +41,14 @@ iso_timestamp() {
 iso_timestamp_offset() {
     date -u -d "$1" +%Y-%m-%dT%H:%M:%SZ
 }
+
+# Verify task exists in blackboard, exit 1 if not
+# Usage: require_task_exists "$TASK_ID" "$STATE"
+require_task_exists() {
+    local task_id="$1"
+    local state_file="$2"
+    if ! yq -e ".tasks[] | select(.id == \"$task_id\")" "$state_file" > /dev/null 2>&1; then
+        echo "ERROR: Task '$task_id' not found in blackboard" >&2
+        exit 1
+    fi
+}

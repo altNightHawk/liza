@@ -37,6 +37,8 @@ PROJECT_ROOT=$(get_project_root)
 STATE="$PROJECT_ROOT/.liza/state.yaml"
 TIMESTAMP=$(iso_timestamp)
 
+require_task_exists "$TASK_ID" "$STATE"
+
 if [ "$VERDICT" = "APPROVED" ]; then
     verdict_patch=".status = \"APPROVED\" | .approved_by = \"$LIZA_AGENT_ID\" | .rejection_reason = null"
     event_name="approved"
@@ -50,4 +52,7 @@ else
 fi
 
 REJECTION_REASON="$REJECTION_REASON" "$SCRIPT_DIR/liza-lock.sh" modify \
-  yq -i "(.tasks[] | select(.id == \"$TASK_ID\")) |= ($verdict_patch | .reviewing_by = null | .review_lease_expires = null | .history = ((.history // []) + [$history_entry]))" "$STATE"
+  yq -i "
+    (.tasks[] | select(.id == \"$TASK_ID\")) |= ($verdict_patch | .reviewing_by = null | .review_lease_expires = null | .history = ((.history // []) + [$history_entry])) |
+    .agents.\"$LIZA_AGENT_ID\".status = \"IDLE\"
+  " "$STATE"
