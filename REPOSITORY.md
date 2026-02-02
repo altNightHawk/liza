@@ -129,7 +129,7 @@ User-facing documentation.
 | `DEMO.md`                             | Full end-to-end walkthrough |
 | `../contracts/contract-activation.md` | How to activate the contract for pairing mode |
 | `TROUBLESHOOTING.md`                  | Common issues and fixes |
-| `Liza-foundation.md`                  | Core concepts, philosophy, and framework comparison (internal) |
+| `_archive/Liza-foundation.md`         | (Archived) Merged into `specs/build/0.md` |
 | `architectural-issues.md`             | Known architectural concerns |
 | `release_notes/`                      | Version changelogs |
 

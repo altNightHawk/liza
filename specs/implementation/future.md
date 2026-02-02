@@ -20,6 +20,7 @@
 | **Real-time circuit breaker** | Continuous pattern monitoring | v1 human-triggered sufficient |
 | **Token budget tracking** | Per-sprint token limits | API doesn't expose; calendar time sufficient |
 | **Multi-sprint planning** | Release/milestone level planning | One sprint at a time for v1 |
+| **Checkpoint-based retrospectives** | Structured retrospectives at each checkpoint | Manual retrospectives sufficient for v1 |
 | **Automated spec update suggestions** | Agent proposes spec changes | Human-only spec changes for v1 |
 | **Spec Writer role** | Dedicated agent with `spec-writing` skill to author specs from vision | Human writes specs for v1; role adds value when spec volume increases |
 | **Spec Reviewer / Systemic Reviewer roles** | `spec-review` skill for consistency, `systemic-thinking` for tensions. Workflow: spec-review → fix → systemic-thinker → decide. Verdict schema: BLOCKED/PASSED/ADVISORY with typed findings (TENSION, LOAD_BEARING) containing summary + implication. Scope levels: goal \| epic \| milestone. | Human review sufficient for v1; formalize when spec complexity warrants |

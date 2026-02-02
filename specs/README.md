@@ -1,12 +1,18 @@
 # Liza Specification Index
 
-See [Vision](vision.md) for the canonical definition and rationale.
-
 ## Quick Navigation
+
+### Build (Intent)
 
 | Document | Purpose |
 |----------|---------|
-| [Vision](vision.md) | Why Liza exists, design philosophy, spec templates |
+| [Vision](build/0 - Vision.md) | Why Liza exists, target users, success metrics, risks |
+
+### Functional (Current State)
+
+| Document | Purpose |
+|----------|---------|
+| [Product Description](functional/0 - Liza.md) | What Liza is, domains, key integrations, scope |
 
 ### Architecture
 
@@ -41,10 +47,11 @@ See [Vision](vision.md) for the canonical definition and rationale.
 ## Reading Order
 
 **For understanding the system:**
-1. [Vision](vision.md) — philosophy and rationale
-2. [Architecture Overview](architecture/overview.md) — components and flow
-3. [Roles](architecture/roles.md) — who does what
-4. [Task Lifecycle](protocols/task-lifecycle.md) — how work flows
+1. [Vision](build/0 - Vision.md) — philosophy and rationale
+2. [Product Description](functional/0 - Liza.md) — what Liza is today
+3. [Architecture Overview](architecture/overview.md) — components and flow
+4. [Roles](architecture/roles.md) — who does what
+5. [Task Lifecycle](protocols/task-lifecycle.md) — how work flows
 
 **For implementation:**
 1. [Blackboard Schema](architecture/blackboard-schema.md) — data structures
@@ -69,7 +76,7 @@ See [Vision](vision.md) for the canonical definition and rationale.
 
 ### Design Philosophy
 
-See [Vision: Why](vision.md#why) for the design philosophy and cost gradient.
+See [Vision](build/0 - Vision.md) for the design philosophy and cost gradient.
 
 ---
 
@@ -84,7 +91,8 @@ See [Vision: Why](vision.md#why) for the design philosophy and cost gradient.
 
 | Category | Documents | Status |
 |----------|-----------|--------|
-| Vision | 1 | Complete |
+| Build | 1 (0.md) | Complete |
+| Functional | 1 (0.md) | Complete — domains pending expansion |
 | Architecture | 4 + ADR/ | Complete |
 | Protocols | 4 | Complete |
 | Implementation | 4 | Complete |

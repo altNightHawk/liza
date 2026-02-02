@@ -16,7 +16,7 @@ Single-agent coding works until it doesn't. The agent marks their task complete 
 
 Multi-agent systems promise coordination, but most inherit the same failure modes and add new ones: agents approve each other's mistakes, drift collectively from the goal, or converge confidently on broken solutions.
 
-For the detailed analysis of agent failure modes and why typical guidelines fail, see [Liza Foundation](../docs/Liza-foundation.md).
+For the detailed analysis of agent failure modes and why typical guidelines fail, see [Vision](../build/0%20-%20Vision.md).
 
 > Systems that optimize for immediate output generate muda—defects, rework, and correction loops. By optimizing for trust, quality, and auditability, Liza eliminates these wasted cycles—and should reach completion sooner, not later.
 >
