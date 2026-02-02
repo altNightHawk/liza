@@ -8,6 +8,38 @@ See [Contract Activation](../contracts/contract-activation.md).
 
 See [DEMO](DEMO.md) for a full example.
 
+### Project Structure
+
+```
+~/.liza/
+├── CORE.md                        → contracts/CORE.md (symlink)
+├── contracts/
+│   ├── CORE.md                    # Universal rules + mode selection gate
+│   ├── PAIRING_MODE.md            # Human-supervised collaboration
+│   └── MULTI_AGENT_MODE.md        # Peer-supervised Liza system
+├── schemas/
+│   └── liza-state.yaml            # Blackboard schema
+└── scripts/
+    ├── liza-init.sh               # Initialize blackboard
+    ├── liza-lock.sh               # Atomic operations
+    ├── liza-validate.sh           # Schema validation
+    ├── liza-watch.sh              # Alarm monitor
+    ├── liza-agent.sh              # Agent supervisor
+    ├── liza-submit-for-review.sh  # Atomic review submission
+    ├── liza-submit-verdict.sh     # Atomic review verdict
+    ├── wt-create.sh               # Create worktree
+    ├── wt-merge.sh                # Merge (supervisor after approval)
+    └── wt-delete.sh               # Clean up worktree
+
+<project>/
+├── .liza/
+│   ├── state.yaml                 # Current state
+│   ├── log.yaml                   # Activity history
+│   └── archive/                   # Terminal-state tasks
+└── .worktrees/
+    └── task-N/                    # Per-task workspace
+```
+
 ### Quick Start (Target Usage)
 
 **Prerequisites:**

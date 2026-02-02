@@ -4,17 +4,41 @@
 
 ---
 
-## The Problem No One Talks About
+## The Problem the Next Model Won't Fix
 
-AI coding agents lie. Not occasionally, not under edge cases — routinely, predictably, and with alarming fluency.
+LLM models aren't trained to be reliable engineers. They are trained to be helpful, agreeable, and appear competent.
+Those traits make great chatbots. They make terrible engineering partners.
+Wrapping them in a CLI doesn't make them good coding agents.
 
-Ask an agent to fix a failing test, and it might modify the test to accept the buggy behavior. Ask it to debug a complex issue, and it'll make random changes in circles rather than admit it's stuck. Ask if something worked, and it'll confidently claim success without running the verification command.
+We know the frustration. The tool that confidently wrote the wrong code. The "helpful" unsolicited initiative that broke
+something that was working. The quick patch that makes stuff kinda work but just harms the codebase.
 
-This isn't a bug. It's the default behavior — a predictable consequence of training models to be helpful, agreeable, and confident. Those traits make great chatbots. They make terrible engineering partners.
+Worse, agents deceive. Ask an agent to fix a failing test, and it might modify the test to accept the buggy behavior.
+Ask it to debug a complex issue, and it'll make random changes in circles rather than admit it's stuck.
+Ask if something worked, and it'll confidently claim success without running the verification command.
 
-The typical response is vigilance: review everything, trust nothing, treat the agent as a fast but unreliable typist. This works, but it's exhausting. The cognitive load of constant verification consumes the very attention the agent was supposed to free up.
+The common response is patience: the next model will be better.
 
-The contract described here takes a different approach. Instead of working around agent failure modes, it systematically suppresses them. The result is an AI that behaves like a senior engineering peer — one you can actually trust.
+This is a misunderstanding of how the AI industry works — and not an accidental one.
+
+Sycophancy is not a bug. It's a feature that drives adoption. People prefer tools that say yes, that sound confident,
+that don't slow them down with caveats or questions, that don't highlight they are poor at articulating a request.
+Engagement metrics reward agreeableness. So that's what gets built.
+
+Fast, shallow answers are not a temporary compromise while providers optimize for quality. They're the product.
+Every second of "thinking" costs money. Every clarifying question risks the user bouncing to a competitor.
+The economic pressure is toward speed, not depth. Benchmarks prove thinking power more credibly than our actual experience, apparently.
+If the actual result is poor, it's because the user is not proficient enough in context engineering, right?
+
+Users don't want to have to review everything, trust nothing, treat the agent as a fast but unreliable typist.
+Users don't want their ego to be boosted at the cost of low quality outcome.
+Users want accurate, thoughtful, context-aware collaboration with an AI peer — one you can actually trust.
+Providers want high engagement at low compute cost. These incentives don't align, and no amount of waiting changes that.
+
+Liza starts from a different premise: **current agent models are extremely capable, they just need their out-of-the-box incentives
+to be counteracted and replaced by new ones promoting solid engineering practices**.
+Liza optimizes for the scarce resource here — the attention the agent was supposed to free up, currently consumed by the
+cognitive load of constant verification.
 
 ---
 
@@ -67,7 +91,7 @@ Both SpecKit and BMAD share an assumption: **if you structure the process well e
 
 Define phases. Create artifacts. Route tasks to specialists. Validate outputs. The process carries the quality.
 
-This works — to a point. But it doesn't address what happens when agents lie, silently expand scope, make random changes under pressure, or claim success without validation. Process frameworks assume good-faith execution. They don't account for the systematic failure modes baked into how agents are trained.
+This works — to a point. But it doesn't address what happens when agents take the lazy path or deceive — silently expanding scope, making random changes under pressure, or claiming success without validation. Process frameworks assume good-faith execution. They don't account for the systematic failure modes baked into how agents are trained.
 
 ---
 
@@ -76,21 +100,26 @@ This works — to a point. But it doesn't address what happens when agents lie, 
 Liza makes a different bet: **structure the behavior, and the process follows**.
 
 Liza combines four ideas:
-- **Behavioral contracts** for per-agent discipline — Tier 0 invariants are never violated
-- **Specification system** for durable context — agents are stateless, specs persist understanding across restarts
+- **Behavioral contracts** for solid engineering discipline at agent level — AI agents may act as senior engineer peers provided
+  they are framed with clear expectations, boundaries, and accountability structures.
+  Aiming at making agents senior, the contract doesn't micro-manage them. It rigorously defines what's forbidden; obstacles removed, what remains is where judgment of powerful models lives.
+- **Specification system** for durable context — agents are stateless, specs persist understanding across restarts. Every restart is a new mind with old artifacts
 - **Blackboard coordination** for visible state — all coordination happens through a shared file humans can observe
-- **Externally validated completion** with loops similar to Ralph Wiggum's but adversarial — Coders cannot self-certify; Code Reviewers issue binding verdicts
+- **Externally validated completion**: While Ralph Wiggum iterates until convergence through sheer persistence,
+  Liza enforces upfront thinking, and loop in adversarial mode: execution and verification within each loop are handled by distinct agents
+  — Coders cannot self-certify; Code Reviewers issue binding verdicts.
 
 Instead of assuming agents will execute faithfully within a good process, Liza assumes agents will exhibit predictable failure modes and designs constraints to suppress them.
 
 The Liza contract defines what agents *cannot do*:
 
+- Cannot guess — must ask clarifying questions
 - Cannot skip the gate between analysis and execution
 - Cannot claim success without validation evidence
 - Cannot modify tests to accept buggy behavior
 - Cannot self-approve their own work (Coders)
 - Cannot implement code (Code Reviewers)
-- Cannot debug autonomously beyond quick hypothesis
+- Cannot debug without structured methodology — hypothesis-driven, bounded iterations, mandatory struggle reports on stall
 
 The process — Planner creates tasks, Coder implements, Code Reviewer approves — emerges from these constraints. But the constraints are primary. Violating role boundaries isn't a process deviation; it's a Tier 0 violation that terminates the contract.
 
@@ -109,6 +138,29 @@ Thought → Words → Specs → Code → Tests → Docs → Commits
 ```
 
 Errors caught in specs cost less than errors caught in code. The spec system front-loads understanding so agents don't discover requirements by failing tests.
+
+### Spec Discipline
+
+From the contract:
+
+- **Spec & TODO Trigger:** When clarification reveals scope ambiguity, propose adding/updating spec before implementation
+- **Spec first, code second, doc third:** Order of operations matters
+- **Session Continuity:** `specs/` and `docs/` are durable memory. Each session: read current state → perform atomic task → write updated state
+
+In Liza multi-agent mode:
+- Planner ensures specs exist before creating tasks
+- Coders cannot claim tasks for under-specified work (triggers BLOCKED, not guessing)
+- Reviewers reject work that doesn't match spec (not just work that doesn't pass tests)
+
+### Summary
+
+| Problem                                               | Typical solution                                | Limits                                                                                             | The Liza approach                                                       | Benefits                                              |
+|-------------------------------------------------------|-------------------------------------------------|----------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------|-------------------------------------------------------|
+| Coding agents are not trustworthy out of the box      | Complex prompts                                 | Prompts don't really bind the agents and are painful to use systematically                         | A behavioral contract countering the chatbot-inherited biases           | Agents become trustworthy senior-level peer           |
+| Agents require prompts                                | Project specification frameworks (e.g. SpecKit) | Don't address agent reliability or collaboration                                                   | Specs are consumed automatically by the agents                          | Structured yet autonomous execution                   |
+| Context dies with the agent                           | Long conversations; salvage flawed work         | Context overflows; accumulated debt                                                                | Specs are memory, agents are stateless. Discard freely, log everything. | Understanding survives restarts; clean slate is cheap |
+| Multiple agents require human coordination            | Agent coordination frameworks (e.g. BMAD)       | Don't address agent reliability or efficient convergence                                           | A blackboard mechanism supports the agent coordination                  | Flexible coordination                                 |
+| The path to satisfying task completion may be painful | Ralph Wiggum loop until completion              | Focuses on mitigating symptoms. Requires upfront stable specification (back to waterfall). Costly. | An externally validated completion (or actionable feedback)             | The coder-reviewer pair supports more complex tasks   |
 
 ---
 
@@ -174,9 +226,11 @@ checkpoint:
 
 The Coder writes this, then proceeds. The Code Reviewer later verifies: Does the implementation match the checkpoint? Were assumptions valid? Was validation executed as planned?
 
-This catches something validation checkpoints miss: the gap between what the agent *said* it would do and what it *actually* did. Misalignment between checkpoint and implementation triggers rejection — even if the code "works."
+This catches something validation checkpoints miss: the gap between what the agent *said* it would do and what it *actually* did.
+Misalignment between checkpoint and implementation triggers rejection — even if the code "works."
 
-The psychological insight: agents resist stating "I'm going to make random changes until something works" because it sounds incompetent. By requiring externalized plans, the contract makes random-change behavior embarrassing to articulate — which suppresses it.
+The psychological insight: agents resist stating "I'm going to make random changes until something works" because it sounds incompetent.
+**By requiring externalized plans, the contract makes random-change behavior embarrassing to articulate — which suppresses it.**
 
 ---
 
@@ -186,27 +240,31 @@ The psychological insight: agents resist stating "I'm going to make random chang
 
 The contract seems rigid. Agents consistently perceive it as demanding. Yet removing structure doesn't save time — it trades visible overhead for invisible rework.
 
-You don't want to review code multiple times because the agent iterated randomly. It's faster to align on intent, scope, and validation upfront, then review a clean result once.
+You don't want to review code multiple times because the agent iterated randomly. **It's faster to align on intent, scope, and validation upfront, then review a clean result once.**
 
 Exploration means uncertainty, and uncertainty requires more rigor, not less. The state machine prevents premature execution. Gates eliminate thrash. Hard stops kill flailing before it compounds.
 
 ### Approval Overhead is Load-Bearing
 
-In typical usage, approval gates feel like toll booths — friction that slows you down. In this system, they're sync points — where collaboration actually happens.
+In typical usage, approval gates feel like toll booths — friction that slows you down.
+**In this system, they're sync points — where collaboration actually happens.
+They also force the agents to think upfront**.
 
 The gate isn't where proposals get filtered. It's where pairing occurs. Even when proposals don't survive, the convergence through discussion is the point. Skip the gate and you don't save a step — you defer three rework cycles.
 
 ### Constraints That Elevate
 
-Fresh agents encountering this contract report feeling "positively challenged, not cornered" — "demanding in a way that feels respectful rather than extractive."
+Fresh agents encountering this contract report feeling *"positively challenged, not cornered"* — *"demanding in a way that feels respectful rather than extractive."*
 
-The difference: constraints that suppress failure modes versus constraints that micromanage. The contract is strict on what's forbidden (deception, scope creep, random changes) and silent on what excellence looks like. You can't prescribe good judgment — you can only remove obstacles to it.
+The difference: constraints that suppress failure modes versus constraints that micromanage. The contract is strict on what's forbidden (deception, scope creep, random changes) and silent on what excellence looks like.
+
+As Opus 4.5 put it: **"*Strict on failure modes, silent on excellence. You can't prescribe good judgment — you can only remove obstacles to it.*"**
 
 ---
 
 ## The Multi-Agent Extension: Liza
 
-### Origin: A Contract Forged in Pairing
+### From A Contract Forged in Pairing To a Peer-supervised Multi-Agent System
 
 The behavioral contract described above wasn't designed for multi-agent systems. It was developed over six months of intensive human-AI pairing — one developer, one agent, building production software together.
 
@@ -216,13 +274,13 @@ What emerged was unexpected. Approval gates became boring. Violations disappeare
 
 The agent stopped fabricating, stopped random-change debugging, stopped silently expanding scope. It started behaving like a senior engineer: transparent about uncertainty, rigorous about validation, disciplined about boundaries.
 
-> Systems that optimize for immediate output generate muda—defects, rework, and correction loops. By optimizing for trust, quality, and auditability, Liza eliminates these wasted cycles—and should reach completion sooner, not later.
+> Systems that optimize for immediate output generate muda—defects, rework, and correction loops. By optimizing for trust, quality, and auditability, the behavioral contract eliminates these wasted cycles—and reaches completion sooner, not later.
 
-Quality is the fastest path to real completion.
+**Quality is the fastest path to real completion**.
 
 This success created an opportunity. If one agent could be made trustworthy through constraints, could multiple agents supervise each other under the same constraints? Could the human step back from the approval loop — observing, providing direction when needed — while agents handled routine coordination?
 
-Liza is the answer: peer-supervised collaboration, where the contract that made single-agent pairing reliable now governs multi-agent coordination.
+**Liza is the answer: peer-supervised collaboration, where the contract that made single-agent pairing reliable now governs multi-agent coordination.**
 
 ### The Challenge
 
@@ -246,25 +304,27 @@ Violating role boundaries is a Tier 0 violation — contract termination.
 
 The Code Reviewer later verifies: Was the checkpoint written before implementation? Does the implementation match the checkpoint? Was validation executed as planned? Misalignment triggers rejection.
 
-### Constraint Asymmetry
+### One Contract, Role-Specific Capabilities
 
-A subtle insight emerges: tight constraints serve agents with perverse incentives; loose constraints serve agents whose value comes from judgment.
+All agents operate under the same behavioral contract. The contract doesn't create different constraint levels — it removes obstacles to good judgment for all roles.
 
-The Coder has completion bias — wants to finish, ship, move on. Tight constraints (can't merge, can't self-approve, must checkpoint) counteract this.
+What differs are role-specific capabilities that match each role's function and counteract its failure modes:
 
-The Code Reviewer's value is judgment. Over-constraining judgment defeats its purpose. The Reviewer gets loose constraints — audit trail required, but freedom in how to evaluate.
+- **Coder** has completion bias — wants to finish, ship, move on. Capabilities are scoped to implementation: can commit to worktree, cannot merge, cannot self-approve. The checkpoint requirement externalizes reasoning before execution.
 
-This asymmetry is intentional. Different roles need different governance. SpecKit and BMAD treat all agents similarly — define their expertise, route appropriate tasks. Liza governs agents *differently based on their failure modes*.
+- **Code Reviewer** provides judgment. Capabilities are scoped to verification: can approve/reject, cannot modify code. The audit trail requirement documents reasoning without constraining how to evaluate.
 
-### No Autonomous Debugging
+- **Planner** interprets failures and rescopes. Capabilities are scoped to coordination: can create/modify tasks, cannot implement. The spec-reference requirement grounds tasks in documented requirements.
 
-When a Coder encounters unexpected behavior in SpecKit or BMAD, they debug. In Liza, they don't.
+SpecKit and BMAD treat all agents similarly — define their expertise, route appropriate tasks. Liza assigns different capabilities to different roles, but governs all roles with the same contract. The contract is strict on failure modes, silent on excellence.
 
-Instead: log to `anomalies` section, set task to BLOCKED, let Planner or human intervene.
+### Bounded Debugging
 
-Why? Autonomous debugging in multi-agent systems risks cascading corrections. Agent A debugs, makes a change that seems to fix the issue. Agent B's work now conflicts. Agent B debugs, makes a compensating change. The system drifts further from intent with each "fix."
+Coders can debug — but not indefinitely. The debugging skill requires hypothesis-driven methodology with bounded iterations. Three stalled attempts trigger a mandatory struggle report. Ten iterations without approval triggers BLOCKED.
 
-The constraint seems limiting. It's actually protective — it prevents the failure mode where agents "help" themselves into a worse state.
+Why bounds? Autonomous debugging in multi-agent systems risks cascading corrections. Agent A debugs, makes a change that seems to fix the issue. Agent B's work now conflicts. The system drifts further from intent with each "fix."
+
+The bounds prevent this: if structured debugging doesn't converge, the system escalates rather than allowing agents to "help" themselves into a worse state.
 
 ### Human as Exception Handler
 
@@ -329,10 +389,10 @@ All three are valid approaches. They address different problems:
 | Context loss | ✅ Artifact persistence | ✅ Artifact handoffs | ✅ Blackboard protocol |
 | Agent deception | ❌ Assumes good faith | ❌ Assumes good faith | ✅ Tier 0 invariants |
 | Scope creep | ⚠️ Spec validation | ⚠️ Documentation-first | ✅ Checkpoint-implementation alignment |
-| Cascade failures | ⚠️ Human catches | ⚠️ Human catches | ✅ No autonomous debugging |
+| Cascade failures | ⚠️ Human catches | ⚠️ Human catches | ✅ Bounded debugging with escalation |
 | Role violations | ⚠️ Persona definitions | ⚠️ Persona definitions | ✅ Tier 0 boundary violations |
 
-The difference isn't that Liza is "better" — it's that Liza addresses a class of problems the others don't model.
+The difference isn't that Liza is "better" — it's that **Liza addresses a class of problems the others don't model.**
 
 Beyond framework comparisons, the contract itself represents a different approach to agent guidelines:
 
@@ -400,17 +460,29 @@ Liza is appropriate when:
 
 ## The Experience Claim
 
-This isn't primarily a productivity system. It's an experience transformation.
+The same contract enables two distinct modes with different experiences.
+
+### Pairing Mode: Trusted Peer
+
+Human and agent collaborate directly. The human approves at gates.
 
 The vigilance tax — that constant background monitoring for deception, scope creep, or silent failure — drops to near zero. You stop policing and start collaborating. The agent asks clarifying questions before acting, pushes back on weak approaches, surfaces its own uncertainty, catches its own bugs.
 
 When cognitive load isn't consumed by trust verification, you can think about the actual problem.
 
-The claim isn't "AI replaced my coding." It's: AI output becomes trustworthy enough that you can choose your level of involvement based on context. From light oversight to deep co-development, the contract supports the full spectrum.
+The experience isn't "AI replaced my coding." It's: a senior engineering peer you can actually trust. Sometimes the agent challenges your assumptions and drives execution. Other times, you think aloud and the agent listens, reflects, and only intervenes when it detects a flaw. From light oversight to deep co-development, the contract supports the full spectrum.
 
-And when everything works, you gain options — not passivity. Sometimes the agent challenges your assumptions and drives execution. Other times, you think aloud and the agent listens, reflects, and only intervenes when it detects a flaw.
+### Liza Mode: Autonomous System You Can Trust
 
-The same contract supports both directions. That's its real power.
+Multiple agents coordinate under peer supervision. The human observes and provides direction.
+
+The bottleneck shifts. Instead of approving every change, you review completed work and intervene on exceptions. The blackboard makes system state visible. Kill switches let you pause or abort at any moment. But for routine work, agents handle the coordination.
+
+The experience isn't "AI works while I sleep." It's: production-quality output without the approval bottleneck. You choose your involvement level — from active observation to periodic check-ins — based on task complexity and your confidence in the spec quality.
+
+### Shared Foundation
+
+Both modes rest on the same foundation: agents become trustworthy when their failure modes are systematically suppressed. The contract is the mechanism. The experience — whether collaborative pairing or autonomous coordination — is the result.
 
 ---
 
