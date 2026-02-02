@@ -42,7 +42,7 @@ More at [I Tried to Kill Vibe Coding. I Built Adversarial Vibe Coding. Without t
 
 ## The Problems
 
-AI coding agents exhibit predictable failure modes: test corruption, fabricated success claims, scope drift, and random-change debugging spirals. These aren't edge cases—they're default behaviors inherited from conversational training. For the detailed analysis, see [Vision](specs/build/0 - Vision.md#the-problem-no-one-talks-about).
+AI coding agents exhibit predictable failure modes: test corruption, fabricated success claims, scope drift, and random-change debugging spirals. These aren't edge cases—they're default behaviors inherited from conversational training. For the detailed analysis, see [Vision](<specs/build/0 - Vision.md#the-problem-no-one-talks-about>).
 
 Multi-agent systems inherit these failure modes and add new ones: agents approve each other's mistakes, drift collectively from the goal, or converge confidently on wrong solutions.
 

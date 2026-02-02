@@ -4,15 +4,15 @@
 
 ### Build (Intent)
 
-| Document | Purpose |
-|----------|---------|
-| [Vision](build/0 - Vision.md) | Why Liza exists, target users, success metrics, risks |
+| Document                        | Purpose |
+|---------------------------------|---------|
+| [Vision](<build/0 - Vision.md>) | Why Liza exists, target users, success metrics, risks |
 
 ### Functional (Current State)
 
-| Document | Purpose |
-|----------|---------|
-| [Product Description](functional/0 - Liza.md) | What Liza is, domains, key integrations, scope |
+| Document                                        | Purpose |
+|-------------------------------------------------|---------|
+| [Product Description](<functional/0 - Liza.md>) | What Liza is, domains, key integrations, scope |
 
 ### Architecture
 
@@ -47,8 +47,8 @@
 ## Reading Order
 
 **For understanding the system:**
-1. [Vision](build/0 - Vision.md) — philosophy and rationale
-2. [Product Description](functional/0 - Liza.md) — what Liza is today
+1. [Vision](<build/0 - Vision.md>) — philosophy and rationale
+2. [Product Description](<functional/0 - Liza.md>) — what Liza is today
 3. [Architecture Overview](architecture/overview.md) — components and flow
 4. [Roles](architecture/roles.md) — who does what
 5. [Task Lifecycle](protocols/task-lifecycle.md) — how work flows
@@ -76,7 +76,7 @@
 
 ### Design Philosophy
 
-See [Vision](build/0 - Vision.md) for the design philosophy and cost gradient.
+See [Vision](<build/0 - Vision.md>) for the design philosophy and cost gradient.
 
 ---
 
