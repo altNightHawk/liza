@@ -28,7 +28,6 @@ ln -s $LIZA_DIR/specs
 Create symlinks:
 ```bash
 cd ~/.claude
-ln -s ~/.liza/CORE.md CLAUDE.md
 mkdir -p skills
 for i in ~/.liza/skills/* ; do ln -s "$i" skills/`basename "$i"` ; done
 ```
@@ -194,7 +193,6 @@ Create symlinks:
 ```bash
 mkdir -p ~/.codex/skills
 cd ~/.codex
-ln -s ~/.liza/CORE.md AGENTS.md
 for i in ~/.liza/skills/* ; do ln -s "$i" skills/`basename "$i"` ; done
 ```
 
@@ -225,7 +223,6 @@ Create symlinks:
 ```bash
 mkdir -p ~/.gemini/skills
 cd ~/.gemini
-ln -s ~/.liza/CORE.md GEMINI.md
 for i in ~/.liza/skills/* ; do ln -s "$i" skills/`basename "$i"` ; done
 ```
 
