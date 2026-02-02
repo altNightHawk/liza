@@ -39,6 +39,8 @@
                     └─────────────────┘
 ```
 
+**LLM Providers:** Liza supports multiple providers (Claude, Codex, Mistral, Gemini). The behavioral contract is LLM-agnostic in principle. However, not all providers can fully comply — Claude and Codex achieve full compliance; Gemini and Mistral achieve partial compliance. See ADR-0008.
+
 ## Data Flow
 
 ```
@@ -133,6 +135,14 @@ If two different coders fail the same task, the task framing is presumed wrong. 
 
 When tasks are rescoped, original task becomes SUPERSEDED with explicit reason. New tasks reference what they replace. No silent rewrites.
 
+### Supervisor-Assigns-Work
+
+Agents don't discover and claim their own work. Each agent's supervisor (the enclosing bash loop) claims the task BEFORE spawning the agent. The agent receives pre-claimed work in its bootstrap prompt. This eliminates race conditions and simplifies agent logic. See ADR-0006.
+
+### TDD Enforcement
+
+TDD is mandatory for all code tasks in MAS. Tests must be written first against `done_when` criteria, encoding spec intent before implementation exists. This prevents the failure mode where tests validate what code does rather than what the spec requires. See ADR-0007.
+
 ## Directory Structure
 
 ### Project Repository
@@ -150,39 +160,61 @@ When tasks are rescoped, original task becomes SUPERSEDED with explicit reason. 
 └── .liza/                         # Runtime state (see below)
 ```
 
-### Global Symlink and Contract Loading
+### Global Contract Root and Loading
 
 ```
-~/.liza/
-├── CORE.md                      → <project>/contracts/CORE.md (symlink)
-└── scripts/                       # Generic Liza tooling
+~/.liza/               # Canonical contract root (symlinks to project)
+├── CORE.md              → <project>/contracts/CORE.md
+├── PAIRING_MODE.md      → <project>/contracts/PAIRING_MODE.md
+├── MULTI_AGENT_MODE.md  → <project>/contracts/MULTI_AGENT_MODE.md
+├── AGENT_TOOLS.md       → <project>/contracts/AGENT_TOOLS.md
+├── skills/              → <project>/skills/
+├── scripts/             → <project>/scripts/
+└── specs/               → <project>/specs/
 ```
 
 **Contract Loading Chain:**
-1. Agent reads `~/.claude/CLAUDE.md` (symlink)
-2. Symlink resolves to `<project>/contracts/CORE.md`
-3. CORE.md contains universal rules and mode selection gate
-4. For Liza mode: read MULTI_AGENT_MODE.md
 
-Update symlink when switching projects: `ln -sf /path/to/project/contracts/CORE.md ~/.claude/CLAUDE.md`
+User-level prompts (`~/.claude/CLAUDE.md`) are NOT reliably read by Claude Code. Repo-level prompts are systematically read on session start.
+
+Therefore, each project creates repo-level symlinks:
+```
+<REPO_ROOT>/CLAUDE.md → ~/.liza/CORE.md   # Reliable loading
+<REPO_ROOT>/AGENTS.md → ~/.liza/CORE.md   # Alternative entry point
+<REPO_ROOT>/GEMINI.md → ~/.liza/CORE.md   # Provider-specific entry
+```
+
+1. Agent reads `<REPO_ROOT>/CLAUDE.md` (repo-level, systematic)
+2. Symlink resolves to `~/.liza/CORE.md` → `<project>/contracts/CORE.md`
+3. CORE.md contains universal rules and mode selection gate
+4. For Liza mode: read `~/.liza/MULTI_AGENT_MODE.md`. For Pairing mode: read `~/.liza/PAIRING_MODE.md`.
+
+Refer to `contracts/contract-activation.md` for activating Liza in a user project. See ADR-0009 for rationale.
 
 ### Global Scripts (`~/.liza/scripts/`)
 
 ```
 ~/.liza/scripts/
+    ├── liza-common.sh             # Shared functions sourced by other scripts
     ├── liza-init.sh               # Initialize blackboard
     ├── liza-lock.sh               # Atomic operations
     ├── liza-validate.sh           # Schema validation
     ├── liza-watch.sh              # Alarm monitor
     ├── liza-checkpoint.sh         # Create checkpoint
     ├── liza-analyze.sh            # Circuit breaker analysis
-    ├── liza-agent.sh              # Agent supervisor
+    ├── liza-agent.sh              # Agent supervisor (spawns agents, handles restarts)
+    ├── liza-add-task.sh           # Add task to backlog
+    ├── liza-claim-task.sh         # Atomically claim task for agent
+    ├── liza-prompt-builders.sh    # Construct agent bootstrap prompts
+    ├── liza-submit-for-review.sh  # Submit work for review
+    ├── liza-submit-verdict.sh     # Record review verdict
+    ├── release-claim.sh           # Release claim on task or review
+    ├── clear-stale-review-claims.sh # Clean up abandoned reviews
+    ├── update-sprint-metrics.sh   # Sprint statistics
     ├── wt-create.sh               # Create worktree
     ├── wt-merge.sh                # Merge (supervisor-executed after APPROVED)
     └── wt-delete.sh               # Clean up worktree
 ```
-
-**Note:** `~/.claude/CLAUDE.md` symlinks to the active project's `contracts/CORE.md`. When switching projects, update the symlink.
 
 ### Project Runtime
 
