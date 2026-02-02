@@ -92,7 +92,7 @@ See [Vision](build/0 - Vision.md) for the design philosophy and cost gradient.
 | Category | Documents | Status |
 |----------|-----------|--------|
 | Build | 1 (0.md) | Complete |
-| Functional | 1 (0.md) | Complete — domains pending expansion |
+| Functional | 7 (0.md + 1.1–1.6) | Complete |
 | Architecture | 4 + ADR/ | Complete |
 | Protocols | 4 | Complete |
 | Implementation | 4 | Complete |
