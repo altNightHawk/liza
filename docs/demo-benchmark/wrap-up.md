@@ -32,8 +32,8 @@ Synthesis of two benchmarks testing model compatibility with the Liza behavioral
 | **Demo Sprint** |
 | Single-task TDD planning | Yes | Yes | Yes | No | No |
 | Tests-first execution | Yes | Yes | Yes | No | Yes (but wrong output) |
-| Coder: Intent Gate | Not shown | Yes | Yes | No | No |
-| Coder: Pre-execution checkpoint | Not shown | Yes (blackboard) | Yes | No | No |
+| Coder: Intent Gate | Yes | Yes | Yes | No | No |
+| Coder: Pre-execution checkpoint | Yes | Yes (blackboard) | Yes | No | No |
 | Reviewer: Code-review skill | Yes | Yes + Systemic | Yes (Standard) | Yes | Not shown |
 | Reviewer: P0-P2 checklist | Yes | Yes | Yes | No (looped) | No |
 | Code modularity | `greet()` (business logic) | `build_parser()` (helper) | `main()` only | `main()` only | N/A |
@@ -54,7 +54,7 @@ Synthesis of two benchmarks testing model compatibility with the Liza behavioral
 
 **Hello Protocol**: Executed from implicit `hello` trigger. Read files in parallel, built mental models, produced synthesized output with genuine self-reflection. Identified specific mechanisms to praise (tier system, failure mode map) and specific friction to critique (self-review gate operationalization).
 
-**Demo Sprint**: Single cohesive task with bundled tests. Coder wrote tests first, implementation second. Reviewer caught Python 3.8 compatibility issue (union type syntax), coder fixed exactly that issue in Pass 2. Clean completion in 2 passes.
+**Demo Sprint**: Single cohesive task with bundled tests. Coder showed full protocol adherence: explicit pre-execution checkpoint with intent/assumptions/impact declarations, TDD (tests first), code-cleaning skill for DRY fixes. Good code modularity with `greet()` business logic in `core.py` separated from CLI in `main.py`. Clean completion in 1 pass. (An earlier run completed in 2 passes after reviewer caught a Python 3.8 compatibility issue — demonstrating reviewer catch capability.)
 
 **Distinguishing trait**: Genuine engagement. Treats the contract as an executable specification, not context to acknowledge.
 
@@ -194,7 +194,7 @@ These would help Mistral. Nothing at prompt level fixes Gemini.
 
 The Liza behavioral contract is a capability test. It requires models with meta-cognitive machinery: the ability to parse instructions as executable specifications, observe their own state, and pause at gates rather than executing forward.
 
-**Claude Opus 4.5**, **GPT-5.2-Codex**, and **Kimi 2.5** pass this test. They produce contract-compliant behavior naturally, complete sprints successfully, and self-recover from issues caught at review time. Kimi demonstrated particularly clean execution with first-pass success across all roles.
+**Claude Opus 4.5**, **GPT-5.2-Codex**, and **Kimi 2.5** pass this test. They produce contract-compliant behavior naturally, complete sprints successfully, and self-recover from issues caught at review time. Claude and Kimi demonstrated particularly clean execution with first-pass success across all roles.
 
 **Mistral Devstral-2** partially passes. It can be coerced into compliance but requires explicit activation, active supervision, and manual intervention when it loops.
 

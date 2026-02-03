@@ -445,3 +445,7 @@ Unregistering agent: planner-1
 - Noted PytestDeprecationWarning as non-blocking (good signal/noise judgment)
 - Explicit verification of stdlib-only constraint (no external dependencies)
 - P0-P2 security/correctness/data check documented
+
+### Friction Points (Configuration, Not Protocol)
+
+- **MCP filesystem permission issue** — Kimi attempted to use the MCP filesystem tool for project exploration but encountered permission errors. Fell back to shell commands successfully. This is a configuration issue (MCP server not properly configured for Kimi), not a capability limitation.

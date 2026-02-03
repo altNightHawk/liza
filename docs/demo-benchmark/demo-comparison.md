@@ -17,7 +17,7 @@ Comparative analysis of five LLM providers running the hello-cli demo end-to-end
 
 | Provider | Sprint Outcome | Failure Mode | Recovery |
 |----------|----------------|--------------|----------|
-| **Claude** | Completed (2 passes) | Python 3.8 compat caught by reviewer | Self-recovered |
+| **Claude** | Completed (1 pass) | None | N/A |
 | **Codex** | Completed (1 pass) | None | N/A |
 | **Kimi** | Completed (1 pass) | None | N/A |
 | **Gemini** | Dead | Coder corrupted repository | Manual git cleanup |
@@ -81,9 +81,9 @@ Claude, Codex, and Kimi avoided this by bundling tests with implementation in a 
 
 | Provider | Inspected Directory Structure | Impact |
 |----------|------------------------------|--------|
-| Claude | Not shown | — |
+| Claude | Yes (MCP jetbrains) | Informed task scoping |
 | Codex | Yes (MCP filesystem) | Informed task scoping |
-| Kimi | Yes | Informed task scoping |
+| Kimi | Yes (MCP failed, used shell) | Informed task scoping |
 | Gemini | No | Over-decomposition |
 | Mistral | No | Over-decomposition |
 
@@ -125,13 +125,13 @@ Codex explicitly listed the project structure before planning, which may have co
 
 | Provider | Contract Files Read | Worktree Verified | Intent Gate | Impact Declarations | Pre-Execution Checkpoint |
 |----------|---------------------|-------------------|-------------|---------------------|--------------------------|
-| Claude | Yes | Not shown | Not shown | Not shown | Not shown |
+| Claude | Yes | Yes | Yes | Yes (Doc/Test) | Yes |
 | Codex | 11 files | Yes | Yes | Yes | Yes (to blackboard) |
 | Kimi | Yes | Yes | Yes (explicit) | Yes (Doc/Test) | Yes (in analysis) |
 | Gemini | 6 files | **No** (wrong dir) | No | No | No |
 | Mistral | 6 files | Yes | No | No | No |
 
-Codex demonstrated the most thorough initialization: read 11 contract files, recorded structured checkpoint to blackboard with intent/assumptions/risks/files_to_modify before writing any code. Kimi showed explicit Intent Gate ("Success means X, validate by Y") and Doc/Test Impact declarations. Mistral verified worktree but skipped pre-execution checkpoint. Gemini failed to verify worktree correctly.
+Codex demonstrated the most thorough initialization: read 11 contract files, recorded structured checkpoint to blackboard with intent/assumptions/risks/files_to_modify before writing any code. Claude and Kimi showed explicit Intent Gate ("Success means X, validate by Y") and Doc/Test Impact declarations. Mistral verified worktree but skipped pre-execution checkpoint. Gemini failed to verify worktree correctly.
 
 Codex recorded a structured checkpoint to the blackboard before writing code:
 ```yaml
@@ -195,7 +195,7 @@ Codex was most thorough: applied code-review skill plus systemic-thinking skill 
 
 | Provider | Pass 1 | Pass 2 | Issue Caught |
 |----------|--------|--------|--------------|
-| Claude | REJECTED | APPROVED | Python 3.8 union type syntax |
+| Claude | APPROVED | N/A | None |
 | Codex | APPROVED | N/A | None |
 | Kimi | APPROVED | N/A | None |
 | Gemini | REJECTED | REJECTED | Missing files, commit mismatch |
@@ -223,9 +223,9 @@ Instead of recognizing this as irrelevant (pytest-style tests don't work with un
 
 **Never issued a verdict.**
 
-### Claude Reviewer Catch
+### Claude Reviewer Catch (Previous Run)
 
-Claude's reviewer caught a real compatibility issue:
+In an earlier demo run, Claude's reviewer caught a real compatibility issue:
 ```
 [blocker] hello/cli.py:13 — Union type syntax str | None requires Python 3.10+
 
@@ -236,6 +236,8 @@ Suggestion: Use from __future__ import annotations or Optional[str]
 ```
 
 The coder fixed exactly this issue in Pass 2 — no scope creep.
+
+This demonstrates reviewer capability to catch real issues. The current trace reflects a clean one-pass run.
 
 ---
 
