@@ -52,3 +52,17 @@ require_task_exists() {
         exit 1
     fi
 }
+
+# Normalize a commit reference (short/full SHA, branch, tag) to full 40-char SHA
+# Usage: full_sha=$(normalize_sha "/path/to/repo" "abc123")
+# Exits with error if commit not found
+normalize_sha() {
+    local repo_dir="$1"
+    local commit_ref="$2"
+    local full_sha
+    if ! full_sha=$(git -C "$repo_dir" rev-parse "$commit_ref" 2>/dev/null); then
+        echo "ERROR: commit '$commit_ref' not found in $repo_dir" >&2
+        return 1
+    fi
+    echo "$full_sha"
+}

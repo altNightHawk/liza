@@ -5,6 +5,9 @@
 
 set -euo pipefail
 
+SCRIPT_DIR=$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")
+source "$SCRIPT_DIR/liza-common.sh"
+
 # --- Arguments ---
 readonly TASK_ID="$1"
 
@@ -71,7 +74,8 @@ fi
 # --- Verify Commit SHA ---
 
 actual_commit=$(git -C "$worktree_dir" rev-parse HEAD)
-if [ "$actual_commit" != "$review_commit" ]; then
+expected_commit=$(normalize_sha "$worktree_dir" "$review_commit") || die "review_commit ($review_commit) not found in worktree"
+if [ "$actual_commit" != "$expected_commit" ]; then
     die "Worktree HEAD ($actual_commit) != review_commit ($review_commit)
 Worktree may have been modified after review."
 fi

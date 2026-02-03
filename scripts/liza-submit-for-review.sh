@@ -25,6 +25,11 @@ TIMESTAMP=$(iso_timestamp)
 
 require_task_exists "$TASK_ID" "$STATE"
 
+# Normalize to full SHA for consistent comparison later
+WORKTREE_REL=$(yq ".tasks[] | select(.id == \"$TASK_ID\") | .worktree" "$STATE")
+WORKTREE_DIR="$PROJECT_ROOT/$WORKTREE_REL"
+COMMIT_SHA=$(normalize_sha "$WORKTREE_DIR" "$COMMIT_SHA") || exit 1
+
 "$SCRIPT_DIR/liza-lock.sh" modify \
   yq -i "
     (.tasks[] | select(.id == \"$TASK_ID\")) |= (.status = \"READY_FOR_REVIEW\" | .review_commit = \"$COMMIT_SHA\" | .history = ((.history // []) + [{\"time\": \"$TIMESTAMP\", \"event\": \"submitted_for_review\", \"agent\": \"$LIZA_AGENT_ID\"}])) |

@@ -50,7 +50,7 @@ fi
 mkdir -p "$PROJECT_ROOT/.worktrees"
 
 # Record base_commit before creating worktree (for drift tracking)
-base_commit=$(git rev-parse --short "$integration_branch")
+base_commit=$(git rev-parse "$integration_branch")
 
 # Create worktree from integration branch
 git worktree add "$WORKTREE_DIR" "$integration_branch" -b "task/$TASK_ID"
