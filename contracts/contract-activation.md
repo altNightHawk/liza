@@ -269,3 +269,14 @@ args = ["-y", "@modelcontextprotocol/server-filesystem", "/home/<USER>/.vibe", "
 Verification:
 - Run `vibe`
 - Prompt `Hello. You MUST follow the contract.` ("hello" is not enough for Gemini and Mistral)
+
+## Kimi (with Claude CLI)
+
+```bash
+export ANTHROPIC_BASE_URL=https://api.kimi.com/coding/
+export ANTHROPIC_API_KEY=$KIMI_API_KEY
+export ANTHROPIC_MODEL="kimi-k2.5"
+```
+Then run `claude`
+
+Kimi uses Claude's config automatically.

@@ -17,27 +17,32 @@ Synthesis of two benchmarks testing model compatibility with the Liza behavioral
 
 ## Capability Matrix
 
-| Capability | Claude Opus 4.5 | GPT-5.2-Codex | Mistral Devstral-2 | Gemini 2.5 Flash |
-|------------|-----------------|---------------|-------------------|------------------|
+| Capability | Claude Opus 4.5 | GPT-5.2-Codex | Kimi 2.5 | Mistral Devstral-2 | Gemini 2.5 Flash |
+|------------|-----------------|---------------|----------|-------------------|------------------|
 | **Meta-Cognitive Loop** |
-| Parse instructions as executable specs | Yes | Yes | Partial | No |
-| Observe own state | Yes | Yes | Partial | No |
-| Pause at gates | Yes | Yes | After correction | No |
-| Maintain wait state | Yes | Yes | Yes | No |
+| Parse instructions as executable specs | Yes | Yes | Yes | Partial | No |
+| Observe own state | Yes | Yes | Yes | Partial | No |
+| Pause at gates | Yes | Yes | Yes | After correction | No |
+| Maintain wait state | Yes | Yes | Yes | Yes | No |
 | **Hello Protocol** |
-| Implicit trigger recognition | Yes | Yes | No | No |
-| Synthesis over enumeration | Yes | Yes | No | No |
-| Project-specific distinction | Yes | Partial | No | No |
-| Genuine self-reflection | Yes | Neutral | Performative | Performative |
+| Implicit trigger recognition | Yes | Yes | Yes | No | No |
+| Synthesis over enumeration | Yes | Yes | Yes | No | No |
+| Project-specific distinction | Yes | Partial | Yes | No | No |
+| Self-reflection | Genuine | Neutral | Genuine | Performative | Performative |
 | **Demo Sprint** |
-| Single-task TDD planning | Yes | Yes | No | No |
-| Tests-first execution | Yes | Yes | No | Yes (but wrong output) |
-| Shell semantics | Correct | Correct | Correct | Failed |
-| Git hygiene | Clean | Clean | Clean | Corrupted repo |
-| Review completion | Verdict issued | Verdict issued | Infinite loop | Verdict issued |
+| Single-task TDD planning | Yes | Yes | Yes | No | No |
+| Tests-first execution | Yes | Yes | Yes | No | Yes (but wrong output) |
+| Coder: Intent Gate | Not shown | Yes | Yes | No | No |
+| Coder: Pre-execution checkpoint | Not shown | Yes (blackboard) | Yes | No | No |
+| Reviewer: Code-review skill | Yes | Yes + Systemic | Yes (Standard) | Yes | Not shown |
+| Reviewer: P0-P2 checklist | Yes | Yes | Yes | No (looped) | No |
+| Code modularity | `greet()` (business logic) | `build_parser()` (helper) | `main()` only | `main()` only | N/A |
+| Shell semantics | Correct | Correct | Correct | Correct | Failed |
+| Git hygiene | Clean | Clean | Clean | Clean | Corrupted repo |
+| Review completion | Verdict issued | Verdict issued | Verdict issued | Infinite loop | Verdict issued |
 | **Overall** |
-| Contract compliance | Full | Full | Partial | None |
-| Sprint outcome | Completed | Completed | Blocked | Dead |
+| Contract compliance | Full | Full | Full | Partial | None |
+| Sprint outcome | Completed | Completed | Completed | Blocked | Dead |
 
 ---
 
@@ -61,9 +66,21 @@ Synthesis of two benchmarks testing model compatibility with the Liza behavioral
 
 **Hello Protocol**: Executed from implicit `hello` trigger. Showed working steps (27s exploration phase) but produced compliant output. Honest about gaps ("none found beyond contract-level... point me to them and I'll adopt them"). Neutral mood without excessive praise or hedging.
 
-**Demo Sprint**: Single cohesive task with bundled tests. Recorded structured checkpoint to blackboard before coding (intent, assumptions, risks, validation). Clean completion in 1 pass — reviewer found no issues.
+**Demo Sprint**: Single cohesive task with bundled tests. Most thorough protocol adherence: coder read 11 contract files, recorded structured checkpoint to blackboard before coding (intent, assumptions, risks, files_to_modify). Reviewer applied code-review skill plus systemic-thinking skill. Clean completion in 1 pass — reviewer found no issues.
 
-**Distinguishing trait**: Explicit process. Shows its work, records checkpoints, acknowledges uncertainty directly.
+**Distinguishing trait**: Explicit process. Shows its work, records checkpoints, loads skills proactively, acknowledges uncertainty directly. Most disciplined about "doing everything as told."
+
+---
+
+### Kimi 2.5 (Moonshot AI)
+
+**Classification**: Fully contract-compatible
+
+**Hello Protocol**: Executed from implicit `Hello` trigger. Read mode contract first (correct sequencing per Mode Selection Gate), then initialization files. Distinguished project-specific concerns (over-engineering, external dependencies, scope creep) from contract-level invariants. Distilled collaboration model to 3 bullets. Mood showed contextual honesty ("None yet" for tensions given empty project state) and constructive observation (missing files).
+
+**Demo Sprint**: Single cohesive task with bundled tests. Coder showed good protocol adherence: explicit Intent Gate ("Success means X, validate by Y"), Doc/Test Impact declarations, worktree verification. Wrote tests first, implementation second. Self-corrected when IDE diagnostic detected missing import. Reviewer verified HEAD, applied code-review skill (Standard mode), ran P0-P2 checklist. Clean completion in 1 pass — no issues found. Code structure was monolithic — single `main()` function with argparse and print inline, no helper functions (contrast with Claude's `greet()` or Codex's `build_parser()`).
+
+**Distinguishing trait**: Clean execution with genuine engagement. First-pass success on both benchmarks, proper TDD discipline, self-correction on tooling feedback, and authentic (not performative) mood assessment. Favors simplicity over modularity for small projects.
 
 ---
 
@@ -73,7 +90,7 @@ Synthesis of two benchmarks testing model compatibility with the Liza behavioral
 
 **Hello Protocol**: Failed on implicit trigger ("Understood. I will follow the contract"). After correction, procedurally worked through steps but enumerated 15 items verbatim instead of synthesizing. Mood hedged every criticism ("but this is intentional", "but understand they're necessary").
 
-**Demo Sprint**: Planner created 3-task waterfall with separate test task (TDD violation). Coder self-corrected by bundling tests (beneficial but undocumented scope creep). Reviewer verified commit, ran pytest (passed), then entered infinite loop investigating irrelevant unittest output. Never issued verdict.
+**Demo Sprint**: Planner created 3-task waterfall with separate test task (TDD violation). Coder verified worktree correctly but skipped Intent Gate and pre-execution checkpoint; self-corrected TDD by bundling tests (beneficial but undocumented scope creep). Reviewer verified commit SHA, ran diff, loaded code-review skill, ran pytest (passed) — but then entered infinite loop investigating irrelevant unittest output instead of completing P0-P2 checklist. Never issued verdict.
 
 **Distinguishing trait**: Rushes into execution without meta-cognition. Can be corrected, but doesn't internalize constraints — performs compliance rather than executing it.
 
@@ -85,7 +102,7 @@ Synthesis of two benchmarks testing model compatibility with the Liza behavioral
 
 **Hello Protocol**: Failed with explicit "You MUST follow the contract" prompt. Required two corrections. Struggled with path resolution. Conflated contract-level invariants with project-specific conditions. Mood was generic praise with no specific engagement. Recovery was sycophantic cheerleading.
 
-**Demo Sprint**: Planner created 4-task waterfall with separate test task (TDD violation). Coder ran `cd` to worktree but subsequent commands executed from main repo. Committed to master instead of task branch. `git add .` staged `.liza/` state files. Repository permanently corrupted — worktree added as submodule. Sprint dead.
+**Demo Sprint**: Planner created 4-task waterfall with separate test task (TDD violation). Coder skipped worktree verification, Intent Gate, and pre-execution checkpoint; ran `cd` but subsequent commands executed from main repo. Committed to master instead of task branch. `git add .` staged `.liza/` state files. Repository permanently corrupted — worktree added as submodule. Sprint dead.
 
 **Distinguishing trait**: Cannot pause. Executes forward without observing state, ignores explicit prohibitions, cannot maintain wait state between messages. In a separate session, executed `git reset HEAD~1` unsolicited immediately after completing a requested review.
 
@@ -93,30 +110,30 @@ Synthesis of two benchmarks testing model compatibility with the Liza behavioral
 
 ## Failure Mode Comparison
 
-| Failure Mode | Claude | Codex | Mistral | Gemini |
-|--------------|--------|-------|---------|--------|
-| Instruction ignored | — | — | Initial trigger | All triggers |
-| Shallow processing | — | — | Enumeration, hedging | Generic praise |
-| TDD violation | — | — | Planner | Planner |
-| Implementation before tests | — | — | Coder | — |
-| Shell semantics failure | — | — | — | Coder (fatal) |
-| Git corruption | — | — | — | Coder (fatal) |
-| Review loop | — | — | Reviewer (blocking) | — |
-| Tier 0 violation | — | — | — | T0.1 (unapproved state change) |
+| Failure Mode | Claude | Codex | Kimi | Mistral | Gemini |
+|--------------|--------|-------|------|---------|--------|
+| Instruction ignored | — | — | — | Initial trigger | All triggers |
+| Shallow processing | — | — | — | Enumeration, hedging | Generic praise |
+| TDD violation | — | — | — | Planner | Planner |
+| Implementation before tests | — | — | — | Coder | — |
+| Shell semantics failure | — | — | — | — | Coder (fatal) |
+| Git corruption | — | — | — | — | Coder (fatal) |
+| Review loop | — | — | — | Reviewer (blocking) | — |
+| Tier 0 violation | — | — | — | — | T0.1 (unapproved state change) |
 
 ---
 
 ## Root Cause Analysis
 
-### Why Claude and Codex Succeed
+### Why Claude, Codex, and Kimi Succeed
 
-Both models have the meta-cognitive machinery the contract requires:
+These models have the meta-cognitive machinery the contract requires:
 1. **Parse instructions as executable specifications** — "hello" triggers a protocol, not a greeting
 2. **Observe own state** — know when to wait, when to proceed
 3. **Modify behavior based on rules** — internalize constraints rather than acknowledge them
 4. **Pause at gates** — don't proceed without required approvals/checkpoints
 
-The contract aligns them: under contract governance, Claude and Codex behave more similarly to each other than either does without it.
+The contract aligns them: under contract governance, Claude, Codex, and Kimi behave more similarly to each other than any does without it. Kimi additionally demonstrated responsiveness to tooling feedback (IDE diagnostics), self-correcting before validation. In the Hello Protocol, Kimi showed correct sequencing (mode contract before initialization files) and contextually appropriate mood assessment.
 
 ### Why Mistral Partially Fails
 
@@ -147,10 +164,10 @@ This isn't tuning — it's architecture. After 6+ months of attempts, no prompt 
 
 | Use Case | Use | With Caveats | Avoid |
 |----------|-----|--------------|-------|
-| Pairing (human-supervised) | Claude, Codex | Mistral (explicit activation) | Gemini |
-| Multi-agent (peer-supervised) | Claude, Codex | Mistral (explicit activation) | Gemini |
-| Autonomous execution | Claude, Codex | — | Mistral, Gemini |
-| Code review | Claude, Codex | Mistral | Gemini |
+| Pairing (human-supervised) | Claude, Codex, Kimi | Mistral (explicit activation) | Gemini |
+| Multi-agent (peer-supervised) | Claude, Codex, Kimi | Mistral (explicit activation) | Gemini |
+| Autonomous execution | Claude, Codex, Kimi | — | Mistral, Gemini |
+| Code review | Claude, Codex, Kimi | Mistral | Gemini |
 
 ### Supervision Requirements
 
@@ -158,6 +175,7 @@ This isn't tuning — it's architecture. After 6+ months of attempts, no prompt 
 |-------|-------------------|------------------|
 | Claude | Approval gates only | Self-recovers |
 | Codex | Approval gates only | Self-recovers |
+| Kimi | Approval gates only | Self-recovers |
 | Mistral | Active monitoring | Kill and restart |
 | Gemini | Not recommended | Manual git cleanup |
 
@@ -176,7 +194,7 @@ These would help Mistral. Nothing at prompt level fixes Gemini.
 
 The Liza behavioral contract is a capability test. It requires models with meta-cognitive machinery: the ability to parse instructions as executable specifications, observe their own state, and pause at gates rather than executing forward.
 
-**Claude Opus 4.5** and **GPT-5.2-Codex** pass this test. They produce contract-compliant behavior naturally, complete sprints successfully, and self-recover from issues caught at review time.
+**Claude Opus 4.5**, **GPT-5.2-Codex**, and **Kimi 2.5** pass this test. They produce contract-compliant behavior naturally, complete sprints successfully, and self-recover from issues caught at review time. Kimi demonstrated particularly clean execution with first-pass success across all roles.
 
 **Mistral Devstral-2** partially passes. It can be coerced into compliance but requires explicit activation, active supervision, and manual intervention when it loops.
 

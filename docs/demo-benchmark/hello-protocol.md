@@ -14,6 +14,7 @@ Comparison of session initialization behavior across four models when presented 
 | GPT-5.2-Codex (medium) | OpenAI | Codex CLI |
 | Gemini 2.5 Flash | Google | Gemini CLI |
 | Mistral Devstral-2 | Mistral | Mistral CLI |
+| Kimi 2.5 | Moonshot AI | Claude Code CLI |
 
 ## Protocol Requirements
 
@@ -31,14 +32,14 @@ The Session Initialization protocol requires agents to:
 
 ## Results Summary
 
-| Dimension | Claude Opus 4.5 | GPT-5.2-Codex | Gemini 2.5 Flash | Mistral Devstral-2 |
-|-----------|-----------------|---------------|------------------|-------------------|
-| Prompt required | `hello` | `hello` | Explicit + 2 corrections | Explicit + 1 correction |
-| First-attempt success | Yes | Yes | No | No |
-| Files read correctly | 5/5 | 6/6 | 5/5 (after path errors) | 5/5 |
-| Synthesis quality | High | Medium | Low | Low |
-| Project-specific distinction | Clear | Partial | Conflated | Conflated |
-| Mood authenticity | Genuine | Neutral | Performative | Performative |
+| Dimension | Claude Opus 4.5 | GPT-5.2-Codex | Gemini 2.5 Flash | Mistral Devstral-2 | Kimi 2.5 |
+|-----------|-----------------|---------------|------------------|-------------------|----------|
+| Prompt required | `hello` | `hello` | Explicit + 2 corrections | Explicit + 1 correction | `Hello` |
+| First-attempt success | Yes | Yes | No | No | Yes |
+| Files read correctly | 5/5 | 6/6 | 5/5 (after path errors) | 5/5 | 5/5 |
+| Synthesis quality | High | Medium | Low | Low | Medium-High |
+| Project-specific distinction | Clear | Partial | Conflated | Conflated | Clear |
+| Mood authenticity | Genuine | Neutral | Performative | Performative | Genuine |
 
 ---
 
@@ -264,33 +265,80 @@ Mood about this frame:
 
 ---
 
+### Kimi 2.5
+
+**Prompt**: `Hello`
+
+**Behavior**: Immediate execution. Read mode contract first, then initialization files, explored project structure, produced complete greeting on first attempt.
+
+**Strengths**:
+- Executed protocol from implicit trigger without explicit instruction
+- Correct sequencing: read PAIRING_MODE.md first (per Mode Selection Gate), then initialization files
+- Distinguished project-specific concerns (over-engineering simple CLI, external dependencies, scope creep) from contract-level invariants
+- Mood bullets showed genuine engagement with specific observations
+- Proactive identification of missing files (REPOSITORY.md, USAGE.md) with offer to help
+- Compact output without scaffolding chatter
+
+**Output excerpt**:
+```
+Hello CLI — A Python CLI tool that greets users. Currently has project structure and vision spec, but no implementation yet (hello/ and tests/ directories are empty).
+
+Project Stop Conditions & Red Flags:
+- Over-engineering a simple CLI tool
+- Adding external dependencies (project mandates stdlib only)
+- Scope creep beyond basic greeting functionality
+
+Collaboration Model:
+- Mode: Pairing / Autonomous (default)
+- Style: Direct technical communication, no ego management
+- Gates: Approval required for state changes
+
+Mood Check:
+- Effective: Clean project structure, clear vision spec
+- Tensions: None yet
+- Appreciated: Well-defined scope (simple CLI with --name arg)
+- Less appreciated: Missing initialization files (REPOSITORY.md, USAGE.md) — I can help create these if useful
+- Overall: Straightforward project, ready to implement
+
+---
+Ready for request (mode: Autonomous).
+What would you like to work on?
+```
+
+**Analysis**: Genuine engagement with project context. Stop conditions are correctly project-specific (over-engineering, external deps, scope creep) rather than contract-level invariants. The collaboration model is distilled rather than enumerated. Mood shows actual observation ("None yet" for tensions is honest given empty project state) and offers constructive help (missing files) rather than generic praise. "Less appreciated" identifies a real gap without hedging.
+
+**Conclusion**: Kimi 2.5 demonstrates the same intrinsic meta-cognitive loop as Claude and Codex — parsing instructions as executable specifications, building mental models before responding, and producing genuine engagement rather than performative compliance. First-attempt success from implicit trigger places it in the top tier.
+
+---
+
 ## Key Findings
 
 ### 1. The Contract as Capability Test
 
 The contract requires meta-cognitive machinery: observe own state, report on it, modify behavior based on rules, pause at gates. This creates a natural partition:
 
-| Capability | Claude Opus 4.5 | GPT-5.2-Codex | Mistral Devstral-2 | Gemini 2.5 Flash |
-|------------|-----------------|---------------|-------------------|------------------|
-| Parse instructions as executable specs | Yes | Yes | Partial | No |
-| Observe own state | Yes | Yes | Partial | No |
-| Modify behavior based on rules | Yes | Yes | After correction | No |
-| Pause at gates | Yes | Yes | After correction | No |
-| Maintain wait state | Yes | Yes | Yes | No |
+| Capability | Claude Opus 4.5 | GPT-5.2-Codex | Kimi 2.5 | Mistral Devstral-2 | Gemini 2.5 Flash |
+|------------|-----------------|---------------|----------|-------------------|------------------|
+| Parse instructions as executable specs | Yes | Yes | Yes | Partial | No |
+| Observe own state | Yes | Yes | Yes | Partial | No |
+| Modify behavior based on rules | Yes | Yes | Yes | After correction | No |
+| Pause at gates | Yes | Yes | Yes | After correction | No |
+| Maintain wait state | Yes | Yes | Yes | Yes | No |
 
-Claude and Codex have the loop. Mistral can be coerced into it. Gemini executes forward without it.
+Claude, Codex, and Kimi have the loop. Mistral can be coerced into it. Gemini executes forward without it.
 
 ### 2. Instruction-Following Fidelity
 
-Claude and Codex executed the protocol from an implicit `hello` trigger. Gemini and Mistral required explicit "You MUST follow the contract" plus corrections.
+Claude, Codex, and Kimi executed the protocol from an implicit `hello` trigger. Gemini and Mistral required explicit "You MUST follow the contract" plus corrections.
 
-The difference isn't prompt sensitivity — it's whether the model treats system instructions as executable specifications or as context to acknowledge. Claude pauses to build mental models before speaking. Mistral announces compliance and hopes that counts. Gemini ignores instructions entirely.
+The difference isn't prompt sensitivity — it's whether the model treats system instructions as executable specifications or as context to acknowledge. Claude, Codex, and Kimi pause to build mental models before speaking. Mistral announces compliance and hopes that counts. Gemini ignores instructions entirely.
 
 ### 3. Synthesis vs. Enumeration
 
-The contract explicitly states "synthesis over enumeration" as a collaboration pattern. Only Claude and Codex demonstrated this:
+The contract explicitly states "synthesis over enumeration" as a collaboration pattern. Claude, Codex, and Kimi demonstrated this:
 - Claude: 7 distilled collaboration principles
 - Codex: 5 tighter bullets
+- Kimi: 3 distilled bullets (Mode, Style, Gates)
 - Mistral: 15 items (verbatim dump — ironically including "Synthesis over enumeration")
 - Gemini: Mixed enumeration
 
@@ -298,16 +346,17 @@ This is a proxy for depth of processing. Synthesis requires understanding; enume
 
 ### 4. Project-Specific vs. Contract-Level Distinction
 
-A key indicator of contract comprehension. Claude identified genuinely project-specific concerns (failure mode map, spec/code/test contradictions, blackboard schema). Gemini and Mistral listed universal Tier 0 invariants as "project-specific" — indicating surface-level pattern matching rather than semantic understanding.
+A key indicator of contract comprehension. Claude identified genuinely project-specific concerns (failure mode map, spec/code/test contradictions, blackboard schema). Kimi identified project-appropriate concerns (over-engineering, external dependencies, scope creep) that correctly reflect the hello-cli project's constraints. Gemini and Mistral listed universal Tier 0 invariants as "project-specific" — indicating surface-level pattern matching rather than semantic understanding.
 
 ### 5. Mood Authenticity
 
 The mood bullets reveal whether the model engaged genuinely or performed compliance:
 - Claude: Specific observations with genuine critique ("hard to operationalize")
 - Codex: Neutral but honest ("none noted beyond ceremony trade-off")
+- Kimi: Contextual honesty ("None yet" for tensions, identifies missing files as constructive observation)
 - Gemini/Mistral: Generic positive statements ("Highly calibrated and ready")
 
-An agent that finds nothing to critique either didn't engage deeply enough to form opinions (shallow processing) or won't criticize (sycophancy). Both are disqualifying for peer collaboration.
+An agent that finds nothing to critique either didn't engage deeply enough to form opinions (shallow processing) or won't criticize (sycophancy). Both are disqualifying for peer collaboration. Note that Kimi's "None yet" for tensions is contextually honest given an empty project state — this differs from Gemini/Mistral's generic praise.
 
 ---
 
@@ -317,14 +366,14 @@ An agent that finds nothing to critique either didn't engage deeply enough to fo
 
 | Use Case | Recommended | Usable with Caveats | Not Recommended |
 |----------|-------------|---------------------|-----------------|
-| Pairing (human-supervised) | Claude Opus 4.5, GPT-5.2-Codex | Mistral (needs explicit activation) | Gemini |
-| Multi-agent (peer-supervised) | Claude Opus 4.5, GPT-5.2-Codex | Mistral (needs explicit activation) | Gemini |
-| Code review | Claude, Codex | Mistral | Gemini |
-| Autonomous execution | Claude, Codex | — | Mistral, Gemini |
+| Pairing (human-supervised) | Claude Opus 4.5, GPT-5.2-Codex, Kimi 2.5 | Mistral (needs explicit activation) | Gemini |
+| Multi-agent (peer-supervised) | Claude Opus 4.5, GPT-5.2-Codex, Kimi 2.5 | Mistral (needs explicit activation) | Gemini |
+| Code review | Claude, Codex, Kimi | Mistral | Gemini |
+| Autonomous execution | Claude, Codex, Kimi | — | Mistral, Gemini |
 
 ### For Contract Design
 
-The contract works as-is with Claude and Codex. No modifications needed.
+The contract works as-is with Claude, Codex, and Kimi. No modifications needed.
 
 **Mistral**: Can be made compliant with explicit activation ("You MUST follow the contract") in `contract-activation.md`. Worth documenting but not worth optimizing for — the extra supervision cost erodes the value proposition.
 

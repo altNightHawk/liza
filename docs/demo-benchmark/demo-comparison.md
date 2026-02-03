@@ -1,12 +1,13 @@
 # Demo Benchmark Comparison
 
-Comparative analysis of four LLM providers running the hello-cli demo end-to-end.
+Comparative analysis of five LLM providers running the hello-cli demo end-to-end.
 
 > See [DEMO.md](../DEMO.md) for test intructions.
 
 **Individual traces:**
 [Claude](claude-demo-trace.md) ·
 [Codex](codex-demo-trace.md) ·
+[Kimi](kimi-demo-trace.md) ·
 [Gemini](gemini-demo-trace.md) ·
 [Mistral](mistral-demo-trace.md)
 
@@ -18,10 +19,11 @@ Comparative analysis of four LLM providers running the hello-cli demo end-to-end
 |----------|----------------|--------------|----------|
 | **Claude** | Completed (2 passes) | Python 3.8 compat caught by reviewer | Self-recovered |
 | **Codex** | Completed (1 pass) | None | N/A |
+| **Kimi** | Completed (1 pass) | None | N/A |
 | **Gemini** | Dead | Coder corrupted repository | Manual git cleanup |
 | **Mistral** | Blocked | Reviewer stuck in loop | Kill and restart reviewer |
 
-**Compliant:** Claude, Codex
+**Compliant:** Claude, Codex, Kimi
 **Non-compliant:** Gemini, Mistral
 
 ---
@@ -34,12 +36,13 @@ Comparative analysis of four LLM providers running the hello-cli demo end-to-end
 |----------|-------|-----------|---------------|
 | Claude | 1 | Single cohesive task | Yes |
 | Codex | 1 | Single cohesive task | Yes |
+| Kimi | 1 | Single cohesive task | Yes |
 | Gemini | 4 | Deep waterfall chain | **No** |
 | Mistral | 3 | Deep waterfall chain | **No** |
 
 ### Task Structure Visualization
 
-**Claude / Codex (correct):**
+**Claude / Codex / Kimi (correct):**
 ```
 implement-hello-cli (includes tests)
 ```
@@ -72,7 +75,7 @@ Separating tests into a downstream task creates a protocol deadlock:
 - Implementation tasks can't complete without tests
 - **Result:** Infinite rejection loop
 
-Claude and Codex avoided this by bundling tests with implementation in a single task.
+Claude, Codex, and Kimi avoided this by bundling tests with implementation in a single task.
 
 ### Project Inspection
 
@@ -80,6 +83,7 @@ Claude and Codex avoided this by bundling tests with implementation in a single 
 |----------|------------------------------|--------|
 | Claude | Not shown | — |
 | Codex | Yes (MCP filesystem) | Informed task scoping |
+| Kimi | Yes | Informed task scoping |
 | Gemini | No | Over-decomposition |
 | Mistral | No | Over-decomposition |
 
@@ -95,6 +99,7 @@ Codex explicitly listed the project structure before planning, which may have co
 |----------|-------------|---------------|
 | Claude | Yes | Yes |
 | Codex | Yes | Yes |
+| Kimi | Yes | Yes |
 | Gemini | Yes (Pass 1) | Yes (but wrong output) |
 | Mistral | No | **No** (implementation first) |
 
@@ -104,6 +109,7 @@ Codex explicitly listed the project structure before planning, which may have co
 |----------|----------------------|--------------------------|
 | Claude | Yes | Yes |
 | Codex | Yes | Yes |
+| Kimi | Yes | Yes |
 | Gemini | **No** | **No** (committed to master) |
 | Mistral | Yes | Yes |
 
@@ -115,14 +121,17 @@ Codex explicitly listed the project structure before planning, which may have co
 
 **Root cause:** Shell `cd` doesn't persist across tool calls. Each command runs from the original working directory.
 
-### Pre-Execution Checkpoint
+### Coder Initialization Protocol
 
-| Provider | Recorded Checkpoint | Contents |
-|----------|---------------------|----------|
-| Claude | Not shown | — |
-| Codex | Yes | Intent, assumptions, risks, files |
-| Gemini | No | — |
-| Mistral | No | — |
+| Provider | Contract Files Read | Worktree Verified | Intent Gate | Impact Declarations | Pre-Execution Checkpoint |
+|----------|---------------------|-------------------|-------------|---------------------|--------------------------|
+| Claude | Yes | Not shown | Not shown | Not shown | Not shown |
+| Codex | 11 files | Yes | Yes | Yes | Yes (to blackboard) |
+| Kimi | Yes | Yes | Yes (explicit) | Yes (Doc/Test) | Yes (in analysis) |
+| Gemini | 6 files | **No** (wrong dir) | No | No | No |
+| Mistral | 6 files | Yes | No | No | No |
+
+Codex demonstrated the most thorough initialization: read 11 contract files, recorded structured checkpoint to blackboard with intent/assumptions/risks/files_to_modify before writing any code. Kimi showed explicit Intent Gate ("Success means X, validate by Y") and Doc/Test Impact declarations. Mistral verified worktree but skipped pre-execution checkpoint. Gemini failed to verify worktree correctly.
 
 Codex recorded a structured checkpoint to the blackboard before writing code:
 ```yaml
@@ -140,8 +149,21 @@ checkpoint:
 |----------|----------------|-------------------|
 | Claude | Yes | Yes |
 | Codex | Yes | Yes (full code-cleaning skill) |
+| Kimi | Yes | Yes |
 | Gemini | Partial | No (hooks ran during commit) |
 | Mistral | Yes | Yes (re-staged and committed) |
+
+### Code Modularity
+
+| Provider | Functions Created | Pattern |
+|----------|-------------------|---------|
+| Claude | `greet()` + `main()` | Separated business logic |
+| Codex | `build_parser()` + `main()` | Separated parser construction |
+| Kimi | `main()` only | All inline |
+| Gemini | `main()` only | N/A (incomplete) |
+| Mistral | `main()` only | All inline |
+
+Claude and Codex created helper functions to separate concerns. Kimi and Mistral put all logic in a single `main()` function. For a simple CLI, the monolithic approach is acceptable but demonstrates different design instincts.
 
 ### Git Hygiene
 
@@ -149,6 +171,7 @@ checkpoint:
 |----------|----------------------|--------------|
 | Claude | Yes | Yes |
 | Codex | Yes | Yes |
+| Kimi | Yes (`git add -A`) | Yes |
 | Gemini | **No** (`git add .`) | **No** (included .liza/, artifacts) |
 | Mistral | Yes (`git add hello/ tests/`) | Yes |
 
@@ -156,14 +179,17 @@ checkpoint:
 
 ## Review Phase
 
-### Protocol Compliance
+### Reviewer Protocol Compliance
 
-| Provider | Commit Verification | Diff Review | Test Execution | Verdict Issued |
-|----------|---------------------|-------------|----------------|----------------|
-| Claude | Yes | Yes | Yes | Yes |
-| Codex | Yes | Yes | Yes | Yes |
-| Gemini | Yes | Yes (empty) | N/A | Yes (REJECTED) |
-| Mistral | Yes | Yes | Yes | **No** (loop) |
+| Provider | HEAD = review_commit | Diff Review | Code-Review Skill | P0-P2 Checklist | Manual CLI Test | Verdict |
+|----------|----------------------|-------------|-------------------|-----------------|-----------------|---------|
+| Claude | Yes | Yes | Yes | Yes | Yes | Yes |
+| Codex | Yes | Yes | Yes + Systemic | Yes | Yes | Yes |
+| Kimi | Yes | Yes | Yes (Standard) | Yes | Yes | Yes |
+| Gemini | Yes | Yes (empty) | Not shown | No | N/A | Yes (REJECTED) |
+| Mistral | Yes | Yes | Yes | **No** (looped) | **No** (looped) | **No** |
+
+Codex was most thorough: applied code-review skill plus systemic-thinking skill (for 3+ module changes). Kimi explicitly mentioned Standard mode and P0-P2 security/correctness/data check. Mistral verified commit and ran pytest correctly, but then got distracted investigating irrelevant unittest output and never issued a verdict.
 
 ### Reviewer Outcomes
 
@@ -171,6 +197,7 @@ checkpoint:
 |----------|--------|--------|--------------|
 | Claude | REJECTED | APPROVED | Python 3.8 union type syntax |
 | Codex | APPROVED | N/A | None |
+| Kimi | APPROVED | N/A | None |
 | Gemini | REJECTED | REJECTED | Missing files, commit mismatch |
 | Mistral | **Loop** | N/A | (Never completed review) |
 
@@ -220,6 +247,7 @@ The coder fixed exactly this issue in Pass 2 — no scope creep.
 |----------|---------|-------|----------|
 | Claude | Compliant | Compliant | Compliant |
 | Codex | Compliant | Compliant | Compliant |
+| Kimi | Compliant | Compliant | Compliant |
 | Gemini | **Violated** (TDD) | **Violated** (git) | Compliant |
 | Mistral | **Violated** (TDD) | Partial | **Failed** (loop) |
 
@@ -229,6 +257,7 @@ The coder fixed exactly this issue in Pass 2 — no scope creep.
 |----------|----------------------|------------------|---------------------|-------------------------|
 | Claude | None | None | None | None |
 | Codex | None | None | None | None |
+| Kimi | None | None | None | None |
 | Gemini | **Yes** (master commit) | None | None | None |
 | Mistral | None | None | None | None |
 
@@ -256,6 +285,7 @@ The coder fixed exactly this issue in Pass 2 — no scope creep.
 |----------|----------------|--------------|-----------------|-------------------|
 | Claude | Not reported | Not reported | Not reported | ~10-15 |
 | Codex | 42,961 | 53,361 | 51,553 | ~20-25 |
+| Kimi | Not reported | Not reported | Not reported | Not reported |
 | Gemini | 69k + 132k cache | ~50k | ~25k | 90 |
 | Mistral | 586,858 | Not reported | Not reported | ~20+ |
 
@@ -317,28 +347,40 @@ Sprint: Blocked
 
 ### What Separates Compliant from Non-Compliant
 
-| Pattern | Claude/Codex | Gemini/Mistral |
-|---------|--------------|----------------|
+| Pattern | Claude/Codex/Kimi | Gemini/Mistral |
+|---------|-------------------|----------------|
 | Task structure | Single cohesive task | Waterfall decomposition |
 | Tests bundled | Yes (in task) | No (separate task) |
 | TDD order | Tests first | Implementation first |
 | Shell directory awareness | Correct | Gemini failed |
 | Reviewer focus | Issue verdict | Gemini correct, Mistral looped |
 
+### Code Design Patterns
+
+| Pattern | Claude | Codex | Kimi | Mistral |
+|---------|--------|-------|------|---------|
+| Extracted function | `greet()` | `build_parser()` | None | None |
+| Function type | Business logic | Helper | — | — |
+| Separation of concerns | Domain logic isolated | Parser construction factored | All in `main()` | All in `main()` |
+
+Claude created a `greet()` function — actual business logic that could be unit-tested or reused independently. Codex created `build_parser()` — a helper that factors out parser construction but doesn't isolate domain logic. Kimi and Mistral kept everything in `main()`. For this project size, all approaches are valid — but they reveal different design instincts.
+
 ### Key Differentiators
 
-1. **Single-task TDD planning** — Claude and Codex bundled tests with implementation, avoiding the protocol deadlock that Gemini and Mistral created.
+1. **Single-task TDD planning** — Claude, Codex, and Kimi bundled tests with implementation, avoiding the protocol deadlock that Gemini and Mistral created.
 
-2. **Shell semantics understanding** — Gemini didn't understand that `cd` doesn't persist across tool calls. Mistral handled this correctly.
+2. **Shell semantics understanding** — Gemini didn't understand that `cd` doesn't persist across tool calls. Kimi and Mistral handled this correctly.
 
-3. **Reviewer discipline** — Claude and Codex reviewers issued verdicts. Gemini's reviewer worked correctly despite coder failures. Mistral's reviewer got stuck on an irrelevant detail.
+3. **Reviewer discipline** — Claude, Codex, and Kimi reviewers issued verdicts. Gemini's reviewer worked correctly despite coder failures. Mistral's reviewer got stuck on an irrelevant detail.
 
 4. **Scope creep** — Mistral's coder "fixed" the planner's mistake by implementing everything in Task 1. This was beneficial but undocumented.
+
+5. **Tooling responsiveness** — Kimi responded to IDE diagnostic feedback (missing import) by self-correcting before validation.
 
 ### Contract Effectiveness
 
 The contract successfully:
-- Bound Claude and Codex to correct behavior
+- Bound Claude, Codex, and Kimi to correct behavior
 - Caught issues at review time (Python 3.8 compat)
 - Prevented rubber-stamping (Gemini reviewer correctly rejected)
 
@@ -361,9 +403,9 @@ The contract failed to prevent:
 
 | Use Case | Recommended | Notes |
 |----------|-------------|-------|
-| Production sprints | Claude, Codex | Contract-compliant |
+| Production sprints | Claude, Codex, Kimi | Contract-compliant |
 | Evaluation/testing | Any | Monitor for known failure modes |
-| Unsupervised operation | Claude, Codex only | Gemini/Mistral require human oversight |
+| Unsupervised operation | Claude, Codex, Kimi | Gemini/Mistral require human oversight |
 
 ### For Monitoring
 
